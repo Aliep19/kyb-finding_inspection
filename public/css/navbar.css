@@ -1,0 +1,155 @@
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #0088ff; /* abu-abu soft */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+    .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Efek hover lebih smooth */
+.user-info:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Avatar juga bisa dikasih efek */
+.user-info:hover .avatar {
+    background-color: #005fcc; /* lebih gelap dari normal */
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+        .date-time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 20px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #c50303 0%, #f81414 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            min-width: 200px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .date-time::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .date-time:hover::before {
+            left: 100%;
+        }
+
+        .date-time:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .date-time .date {
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .date-time .time {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .navbar-main {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .breadcrumb-item a {
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #1c434f !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .date-time {
+                min-width: 160px;
+                padding: 10px 16px;
+            }
+
+            .date-time .date {
+                font-size: 10px;
+            }
+
+            .date-time .time {
+                font-size: 16px;
+            }
+
+            .user-info {
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .date-time {
+                min-width: 140px;
+                padding: 8px 12px;
+            }
+
+            .date-time .date {
+                font-size: 9px;
+            }
+
+            .date-time .time {
+                font-size: 14px;
+            }
+        }
+
+        /* Animation untuk loading */
+        .date-time-loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
