@@ -7,6 +7,7 @@ use App\Models\DefectInput;
 use App\Models\SubWorkstation;
 use App\Services\Inspeksi\DefectInputService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DefectInputController extends Controller
 {
@@ -38,6 +39,7 @@ class DefectInputController extends Controller
         $perPage = $request->input('per_page', 10);
 
         $inputs = $query->with('user')->paginate($perPage)->appends($request->all());
+        // dd(Auth::user());
         return view('defect_inputs.index', compact('inputs'));
     }
 

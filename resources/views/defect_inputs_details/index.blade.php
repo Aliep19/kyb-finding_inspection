@@ -36,14 +36,14 @@
                     <td>{{ $detail->keterangan }}</td>
                     <td class="text-center">
                         <a href="{{ route('defect-input-details.edit',[$defectInput->id,$detail->id]) }}"
-                        class="btn btn-warning btn-sm" title="Edit">
+                        class="badge bg-gradient-warning border-0 shadow-sm" title="Edit">
                             <i class="fa-solid fa-pen-to-square fs-6"></i>
                         </a>
 
                         <form action="{{ route('defect-input-details.destroy',[$defectInput->id,$detail->id]) }}"
                             method="POST" class="d-inline">
                             @csrf @method('DELETE')
-                            <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus detail?')" title="Delete">
+                            <button class="badge bg-gradient-danger border-0 shadow-sm" onclick="return confirm('Hapus detail?')" title="Delete">
                                 <i class="fa-solid fa-trash fs-6"></i>
                             </button>
                         </form>

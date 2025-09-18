@@ -42,9 +42,7 @@ Route::resource('defect', DefectcategoryController::class);
 Route::get('/defect-subs', [DefectSubController::class, 'index'])->name('defect-subs.index');
 Route::get('/defect-subs/create', [DefectSubController::class, 'create'])->name('defect-subs.create');
 Route::post('/defect-subs', [DefectSubController::class, 'store'])->name('defect-subs.store');
-
 Route::get('/defect-categories/{id}/subs', [DefectSubController::class, 'subsByCategory'])->name('defect-subs.byCategory');
-
 Route::get('/defect-subs/{id}/edit', [DefectSubController::class, 'edit'])->name('defect-subs.edit');
 Route::put('/defect-subs/{id}', [DefectSubController::class, 'update'])->name('defect-subs.update');
 Route::delete('/defect-subs/{id}', [DefectSubController::class, 'destroy'])->name('defect-subs.destroy');

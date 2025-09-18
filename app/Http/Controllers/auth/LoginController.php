@@ -10,6 +10,7 @@ use App\Models\Lembur\CtUser;
 use App\Models\Hp;
 use App\Models\Otp;
 use Captcha;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -43,6 +44,7 @@ public function login(Request $request)
         return redirect()->route('login')->withErrors(['error' => 'Data HP tidak ditemukan. Silakan hubungi admin.']);
     }
 
+    Auth::login($user);
     // Hapus OTP lama untuk NPK ini
     Otp::where('npk', $request->npk)->delete();
 
@@ -59,7 +61,7 @@ public function login(Request $request)
     ]);
 
     // Simpan NPK sementara di session
-    Session::put('pending_npk', $request->npk);
+    // Session::put('pending_npk', $request->npk);
 
     // 🔑 Tambahkan daftar OTP manual (misalnya untuk admin/test)
     Session::put('manual_otps', ['111111','222222','333333','444444','555555','666666']);
@@ -72,7 +74,7 @@ public function login(Request $request)
     // Tampilkan form OTP
     public function showOtp()
     {
-        if (!Session::has('pending_npk')) {
+        if (!Auth::user()) {
             return redirect()->route('login')->withErrors(['error' => 'Sesi login expired. Silakan login ulang.']);
         }
 
@@ -85,7 +87,7 @@ public function verifyOtp(Request $request)
         'otp' => 'required|digits:6',
     ]);
 
-    $npk = Session::get('pending_npk');
+    $npk = Auth::user()->npk;
 
     if (!$npk) {
         return redirect()->route('login')->withErrors(['error' => 'Sesi invalid.']);
@@ -130,7 +132,7 @@ public function verifyOtp(Request $request)
     // Request OTP baru
     public function requestNewOtp(Request $request)
     {
-        $npk = Session::get('pending_npk');
+        $npk = Auth::user()->npk;
 
         if (!$npk) {
             return redirect()->route('login')->withErrors(['error' => 'Sesi invalid. Silakan login ulang.']);
