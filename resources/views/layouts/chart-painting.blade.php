@@ -1,12 +1,12 @@
-<!-- views/layouts/chart-defect.blade.php -->
+<!-- resources/views/layouts/chart-painting.blade.php -->
 <div class="card shadow-lg border-0 rounded-3 mt-4">
     <div class="card-header bg-gradient-danger text-white d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-white">
-            <i class="fa fa-chart-line me-2"></i> Final Inspection 4W Finding {{ date('Y') }}
+            <i class="fa fa-chart-line me-2"></i> TREND OF Painting VS Not Painting Finding {{ date('Y') }}
         </h6>
         <!-- Dropdown department -->
         <div>
-            <select id="departmentFilter" class="form-select form-select-sm border-0 shadow-sm"
+            <select id="departmentFilterPainting" class="form-select form-select-sm border-0 shadow-sm"
                 style="width: 220px; font-size: 0.9rem;">
                 <option value="">4W Departments</option>
                 @foreach ($departments as $department)
@@ -19,17 +19,17 @@
     </div>
     <div class="card-body bg-light">
         <div style="height:400px;">
-            <canvas id="findingChart"></canvas>
+            <canvas id="paintingChart"></canvas>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var ctx = document.getElementById('findingChart').getContext('2d');
+        var ctx = document.getElementById('paintingChart').getContext('2d');
         var chart = new Chart(ctx, {
             type: 'bar',
-            data: {!! json_encode($chartData) !!},
+            data: {!! json_encode($paintingRatioChartData) !!},
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
@@ -46,7 +46,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'FI 4W Finding (Pcs)',
+                            text: 'FI Painting Finding (Pcs)',
                             color: '#333',
                             font: { size: 13, weight: 'bold' }
                         }
@@ -96,9 +96,9 @@
         });
 
         // Event listener untuk dropdown
-        document.getElementById('departmentFilter').addEventListener('change', function () {
+        document.getElementById('departmentFilterPainting').addEventListener('change', function () {
             var departmentId = this.value;
-            fetch('/chart-data' + (departmentId ? '/' + departmentId : ''), {
+            fetch('/painting-ratio-chart-data' + (departmentId ? '/' + departmentId : ''), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -110,7 +110,7 @@
                 chart.data = data;
                 chart.update();
             })
-            .catch(error => console.error('Error fetching chart data:', error));
+            .catch(error => console.error('Error fetching painting chart data:', error));
         });
     });
 </script>

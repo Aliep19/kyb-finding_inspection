@@ -99,7 +99,7 @@ class ChartService
             $barColors[] = '#FFD700'; // kuning utk tahun
         }
         for ($i = 1; $i <= 12; $i++) {
-            $barColors[] = '#808080'; // abu utk bulan
+            $barColors[] = '#cbcbcbff'; // abu utk bulan
         }
 
         // Line data → sama

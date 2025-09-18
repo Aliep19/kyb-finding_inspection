@@ -1,14 +1,13 @@
-<!-- views/layouts/chart-defect.blade.php -->
 <div class="card shadow-lg border-0 rounded-3 mt-4">
-    <div class="card-header bg-gradient-danger text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-white">
-            <i class="fa fa-chart-line me-2"></i> Final Inspection 4W Finding {{ date('Y') }}
+    <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold">
+            <i class="fa-solid fa-chart-column me-2"></i> DEFECT RATIO FI FINDING 4W {{ date('Y') }}
         </h6>
         <!-- Dropdown department -->
         <div>
-            <select id="departmentFilter" class="form-select form-select-sm border-0 shadow-sm"
+            <select id="departmentFilterRatio" class="form-select form-select-sm border-0 shadow-sm"
                 style="width: 220px; font-size: 0.9rem;">
-                <option value="">4W Departments</option>
+                <option value="">   4W Departments</option>
                 @foreach ($departments as $department)
                     <option value="{{ $department->id }}" {{ $defaultDepartment && $defaultDepartment->id == $department->id ? 'selected' : '' }}>
                         {{ $department->dept_name }}
@@ -19,42 +18,45 @@
     </div>
     <div class="card-body bg-light">
         <div style="height:400px;">
-            <canvas id="findingChart"></canvas>
+            <canvas id="ratioChart"></canvas>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        var ctx = document.getElementById('findingChart').getContext('2d');
-        var chart = new Chart(ctx, {
+        var ctxRatio = document.getElementById('ratioChart').getContext('2d');
+
+        var chartData = {!! json_encode($ratioChartData) !!};
+        if (chartData.datasets) {
+            chartData.datasets.forEach(ds => {
+                ds.borderRadius = 6; // kasih efek rounded bar aja
+            });
+        }
+
+        var ratioChart = new Chart(ctxRatio, {
             type: 'bar',
-            data: {!! json_encode($chartData) !!},
+            data: chartData,
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
                 interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
+                    mode: 'index',
                     intersect: false,
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
                         title: {
                             display: true,
-                            text: 'FI 4W Finding (Pcs)',
+                            text: 'Ratio (%)',
                             color: '#333',
                             font: { size: 13, weight: 'bold' }
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         title: {
                             display: true,
                             text: 'Tahun {{ date("Y") }}',
@@ -69,7 +71,7 @@
                         position: 'top',
                         labels: {
                             usePointStyle: true,
-                            boxWidth: 10,
+                            boxWidth: 12,
                             font: { size: 12 }
                         }
                     },
@@ -79,7 +81,12 @@
                         bodyColor: '#f8f9fa',
                         borderColor: '#dee2e6',
                         borderWidth: 1,
-                        padding: 10
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                return context.formattedValue + '%';
+                            }
+                        }
                     },
                     datalabels: {
                         color: '#000',
@@ -87,7 +94,7 @@
                         align: 'top',
                         font: { weight: 'bold', size: 11 },
                         formatter: function (value) {
-                            return value !== null ? value : '';
+                            return value !== null ? value + '%' : '';
                         }
                     }
                 }
@@ -96,9 +103,10 @@
         });
 
         // Event listener untuk dropdown
-        document.getElementById('departmentFilter').addEventListener('change', function () {
+        document.getElementById('departmentFilterRatio').addEventListener('change', function () {
             var departmentId = this.value;
-            fetch('/chart-data' + (departmentId ? '/' + departmentId : ''), {
+
+            fetch('/ratio-chart-data' + (departmentId ? '/' + departmentId : ''), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -107,10 +115,15 @@
             })
             .then(response => response.json())
             .then(data => {
-                chart.data = data;
-                chart.update();
+                if (data.datasets) {
+                    data.datasets.forEach(ds => {
+                        ds.borderRadius = 6; // tetap rounded bar
+                    });
+                }
+                ratioChart.data = data;
+                ratioChart.update();
             })
-            .catch(error => console.error('Error fetching chart data:', error));
+            .catch(error => console.error('Error fetching ratio chart data:', error));
         });
     });
 </script>
