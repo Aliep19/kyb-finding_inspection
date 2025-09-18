@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Models\Lembur;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CtUser extends Model
+class CtUser extends Authenticatable
 {
     protected $connection = 'lembur'; // DB lembur
     protected $table = 'ct_users_hash';
