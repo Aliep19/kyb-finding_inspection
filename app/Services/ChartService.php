@@ -13,21 +13,20 @@ class ChartService
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        // Selalu ambil 3 tahun terakhir (walau DB kosong)
+        // Selalu ambil 3 tahun terakhir
         $years = range($currentYear - 2, $currentYear);
 
         $averages = [];
         $targetsPerYear = [];
 
         foreach ($years as $year) {
-            // Hitung rata-rata NG per tahun, dengan join ke relasi departments
             $query = DefectInput::whereYear('defect_inputs.tgl', $year)
-                ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name') // Asumsi line = subsect_name
+                ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
                 ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
                 ->join('departments', 'workstations.id_dept', '=', 'departments.id');
 
             if ($departmentId) {
-                $query->where('departments.id', $departmentId); // Filter berdasarkan department
+                $query->where('departments.id', $departmentId);
             }
 
             $monthlySums = $query->groupByRaw('MONTH(defect_inputs.tgl)')
@@ -39,7 +38,6 @@ class ChartService
             $average = $numMonthsWithData > 0 ? round($totalNg / $numMonthsWithData) : 0;
             $averages[$year] = $average;
 
-            // Ambil target sesuai tahun (sudah ada filter departmentId)
             $targetQuery = Target::where('start_year', '<=', $year)
                 ->where('end_year', '>=', $year);
 
@@ -48,27 +46,49 @@ class ChartService
             }
 
             $target = $targetQuery->first();
-            $targetsPerYear[$year] = $target ? $target->target_value : 0; // kalau ga ada target → 0
+            $targetsPerYear[$year] = $target ? $target->target_value : 0;
         }
 
-        // Data bulanan tahun berjalan, dengan join ke relasi departments
+        // Data bulanan tahun berjalan
         $monthlyFindings = [];
         for ($month = 1; $month <= 12; $month++) {
             $query = DefectInput::whereYear('defect_inputs.tgl', $currentYear)
                 ->whereMonth('defect_inputs.tgl', $month)
-                ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name') // Asumsi line = subsect_name
+                ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
                 ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
                 ->join('departments', 'workstations.id_dept', '=', 'departments.id');
 
             if ($departmentId) {
-                $query->where('departments.id', $departmentId); // Filter berdasarkan department
+                $query->where('departments.id', $departmentId);
             }
 
             $sum = $query->sum('defect_inputs.total_ng');
             $monthlyFindings[$month] = $sum;
         }
 
-        // Labels (tahun + bulan Jan–Des) → sama seperti sebelumnya
+        // 🔥 Hitung persentase naik/turun (dibanding bulan sebelumnya)
+        $comparison = null;
+        $thisMonthValue = $monthlyFindings[$currentMonth] ?? 0;
+        $prevMonthValue = $currentMonth > 1 ? ($monthlyFindings[$currentMonth - 1] ?? 0) : null;
+
+        if ($currentMonth > 1) {
+            if ($prevMonthValue > 0) {
+                $comparison = round((($thisMonthValue - $prevMonthValue) / $prevMonthValue) * 100, 2);
+            } elseif ($thisMonthValue > 0) {
+                $comparison = 100; // naik 100% karena sebelumnya nol
+            } else {
+                $comparison = 0;
+            }
+        }
+
+        // Nama bulan (pakai locale Indo)
+        Carbon::setLocale('id');
+        $thisMonthName = Carbon::now()->translatedFormat('F');
+        $prevMonthName = $currentMonth > 1
+            ? Carbon::now()->subMonth()->translatedFormat('F')
+            : null;
+
+        // Labels
         $labels = [];
         foreach ($years as $year) {
             $labels[] = $year;
@@ -80,7 +100,7 @@ class ChartService
             $labels[] = $name;
         }
 
-        // Bar data → sama seperti sebelumnya
+        // Bar data
         $barData = [];
         foreach ($years as $year) {
             $barData[] = $averages[$year];
@@ -93,16 +113,16 @@ class ChartService
             }
         }
 
-        // Warna bar → sama
+        // Warna bar
         $barColors = [];
         foreach ($years as $year) {
-            $barColors[] = '#FFD700'; // kuning utk tahun
+            $barColors[] = '#FFD700';
         }
         for ($i = 1; $i <= 12; $i++) {
-            $barColors[] = '#cbcbcbff'; // abu utk bulan
+            $barColors[] = '#cbcbcbff';
         }
 
-        // Line data → sama
+        // Line data
         $lineData = [];
         foreach ($years as $year) {
             $lineData[] = $targetsPerYear[$year];
@@ -131,6 +151,12 @@ class ChartService
                     'yAxisID' => 'y',
                 ],
             ],
+            // 🔽 tambahan buat card comparison
+            'comparison'     => $comparison,
+            'thisMonthValue' => $thisMonthValue,
+            'prevMonthValue' => $prevMonthValue,
+            'thisMonthName'  => $thisMonthName,
+            'prevMonthName'  => $prevMonthName,
         ];
     }
 }

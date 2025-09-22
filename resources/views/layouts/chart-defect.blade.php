@@ -41,9 +41,7 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
                         title: {
                             display: true,
                             text: 'FI 4W Finding (Pcs)',
@@ -52,9 +50,7 @@
                         }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         title: {
                             display: true,
                             text: 'Tahun {{ date("Y") }}',
@@ -95,9 +91,7 @@
             plugins: [ChartDataLabels]
         });
 
-        // Event listener untuk dropdown
-        document.getElementById('departmentFilter').addEventListener('change', function () {
-            var departmentId = this.value;
+        function updateChartAndCard(departmentId) {
             fetch('/chart-data' + (departmentId ? '/' + departmentId : ''), {
                 method: 'GET',
                 headers: {
@@ -107,10 +101,49 @@
             })
             .then(response => response.json())
             .then(data => {
-                chart.data = data;
+                // Update chart
+                chart.data.labels = data.labels;
+                chart.data.datasets = data.datasets;
                 chart.update();
+
+                // Update card comparison
+                let comparison = data.comparison;
+                let target = document.getElementById('comparison-card');
+
+                if (comparison !== null) {
+                    if (comparison > 0) {
+                        target.innerHTML = `<span class="text-success">${comparison}% ↑</span>`;
+                    } else if (comparison < 0) {
+                        target.innerHTML = `<span class="text-danger">${Math.abs(comparison)}% ↓</span>`;
+                    } else {
+                        target.innerHTML = `<span class="text-muted">0% (stagnan)</span>`;
+                    }
+                } else {
+                    target.innerHTML = `<span class="text-muted">Data tidak tersedia</span>`;
+                }
+
+                // Update PCS bulan ini & bulan lalu
+                document.getElementById('this-month').innerHTML =
+                    `${data.thisMonthName} : <strong>${data.thisMonthValue}</strong> pcs`;
+
+                if (data.prevMonthValue !== null) {
+                    document.getElementById('prev-month').innerHTML =
+                        `${data.prevMonthName} : <strong>${data.prevMonthValue}</strong> pcs`;
+                } else {
+                    document.getElementById('prev-month').innerHTML = '';
+                }
             })
             .catch(error => console.error('Error fetching chart data:', error));
+        }
+
+        // Event listener dropdown
+        document.getElementById('departmentFilter').addEventListener('change', function () {
+            updateChartAndCard(this.value);
         });
+
+        // 🔥 Trigger fetch pertama kali (pakai default selected)
+        let defaultDept = document.getElementById('departmentFilter').value;
+        updateChartAndCard(defaultDept);
     });
 </script>
+

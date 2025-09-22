@@ -12,6 +12,10 @@
 
         <div class="container-fluid py-4">
             <div class="row g-4">
+                    <!-- KPI -->
+    <div class="col-lg-12">
+        @include('components.kpi', ['comparison' => $comparison])
+    </div>
                 <!-- Chart Defect (1/2 lebar) -->
                 <div class="col-lg-6 col-md-12">
                     @include('layouts.chart-defect')

@@ -1,6 +1,6 @@
 <div class="card shadow-lg border-0 rounded-3 mt-4">
     <div class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-white">
+        <h6 class="mb-0 fw-bold text-black">
             <i class="fa fa-chart-line me-2"></i> PARETO FI FINDINGS BY LINE {{ date('Y') }}
         </h6>
         <!-- Dropdown department -->

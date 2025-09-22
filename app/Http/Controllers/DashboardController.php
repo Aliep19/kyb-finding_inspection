@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ChartService;
 use App\Services\RatioChartService;
 use App\Services\PaintingRatioChartService;
-use App\Services\ParetoFindingsService; // Added new service
+use App\Services\ParetoFindingsService;
 use App\Models\Department;
 
 class DashboardController extends Controller
@@ -13,34 +13,48 @@ class DashboardController extends Controller
     protected $chartService;
     protected $ratioChartService;
     protected $paintingRatioChartService;
-    protected $paretoFindingsService; // Added new property
+    protected $paretoFindingsService;
 
-    public function __construct(ChartService $chartService, RatioChartService $ratioChartService, PaintingRatioChartService $paintingRatioChartService, ParetoFindingsService $paretoFindingsService)
-    {
+    public function __construct(
+        ChartService $chartService,
+        RatioChartService $ratioChartService,
+        PaintingRatioChartService $paintingRatioChartService,
+        ParetoFindingsService $paretoFindingsService
+    ) {
         $this->chartService = $chartService;
         $this->ratioChartService = $ratioChartService;
         $this->paintingRatioChartService = $paintingRatioChartService;
-        $this->paretoFindingsService = $paretoFindingsService; // Added new service injection
+        $this->paretoFindingsService = $paretoFindingsService;
     }
 
     public function index()
     {
-        // Ambil daftar department dengan id 4 dan 5 saja
+        // Ambil department default (misalnya id = 5)
         $departments = Department::whereIn('id', [4, 5])->get();
-        // Ambil department default (misalnya id 5)
         $defaultDepartment = Department::find(5);
-        // Kalau default department ketemu, ambil id-nya, kalau tidak null
         $departmentId = $defaultDepartment ? $defaultDepartment->id : null;
 
-        // Ambil chart data untuk department pertama (atau null jika tidak ada department)
+        // Ambil chart data dari service
         $chartData = $this->chartService->getChartData($departmentId);
         $ratioChartData = $this->ratioChartService->getRatioChartData($departmentId);
-        $paintingRatioChartData = $this->paintingRatioChartService->getPaintingRatioChartData($departmentId); // Tambahkan data untuk chart painting
-        $paretoFindingsChartData = $this->paretoFindingsService->getParetoFindingsByLine($departmentId); // Added new chart data
+        $paintingRatioChartData = $this->paintingRatioChartService->getPaintingRatioChartData($departmentId);
+        $paretoFindingsChartData = $this->paretoFindingsService->getParetoFindingsByLine($departmentId);
 
-        return view('index', compact('departments', 'chartData', 'ratioChartData', 'paintingRatioChartData', 'paretoFindingsChartData', 'defaultDepartment'));
+        // 🔥 comparison persentase bulan ini vs bulan lalu
+        $comparison = $chartData['comparison'] ?? null;
+
+        return view('index', compact(
+            'departments',
+            'chartData',
+            'ratioChartData',
+            'paintingRatioChartData',
+            'paretoFindingsChartData',
+            'defaultDepartment',
+            'comparison'
+        ));
     }
 
+    // API endpoint untuk Chart JS
     public function getChartData($departmentId = null)
     {
         return response()->json($this->chartService->getChartData($departmentId));
@@ -56,7 +70,7 @@ class DashboardController extends Controller
         return response()->json($this->paintingRatioChartService->getPaintingRatioChartData($departmentId));
     }
 
-    public function getParetoFindingsChartData($departmentId = null) // Added new method
+    public function getParetoFindingsChartData($departmentId = null)
     {
         return response()->json($this->paretoFindingsService->getParetoFindingsByLine($departmentId));
     }
