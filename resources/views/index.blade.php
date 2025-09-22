@@ -24,6 +24,9 @@
                 <div class="col-lg-12 ">
                     @include('layouts.chart-ratio')
                 </div>
+                <div class="col-lg-12 ">
+                    @include('layouts.pareto-findings')
+                </div>
 
 
             </div>

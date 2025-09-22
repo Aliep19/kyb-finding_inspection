@@ -33,6 +33,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::get('/chart-data/{departmentId?}', [DashboardController::class, 'getChartData']);
 Route::get('/ratio-chart-data/{departmentId?}', [DashboardController::class, 'getRatioChartData']);
 Route::get('/painting-ratio-chart-data/{departmentId?}', [DashboardController::class, 'getPaintingRatioChartData']); // Tambahkan route baru
+Route::get('/pareto-findings-chart-data/{departmentId?}', [DashboardController::class, 'getParetoFindingsChartData']);
 
 //Main Features
 Route::get('/', [MainController::class, 'index'])->name('index');

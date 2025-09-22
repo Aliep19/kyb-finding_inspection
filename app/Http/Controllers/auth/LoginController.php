@@ -17,6 +17,8 @@ class LoginController extends Controller
     // Tampilkan form login
     public function showLogin()
     {
+        // dd(Auth::user());
+
         return view('auth.login');
     }
 
