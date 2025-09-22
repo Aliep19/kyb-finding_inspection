@@ -112,9 +112,9 @@
 
                 if (comparison !== null) {
                     if (comparison > 0) {
-                        target.innerHTML = `<span class="text-success">${comparison}% ↑</span>`;
+                        target.innerHTML = `<span class="text-danger">${comparison}% ↑</span>`;
                     } else if (comparison < 0) {
-                        target.innerHTML = `<span class="text-danger">${Math.abs(comparison)}% ↓</span>`;
+                        target.innerHTML = `<span class="text-success">${Math.abs(comparison)}% ↓</span>`;
                     } else {
                         target.innerHTML = `<span class="text-muted">0% (stagnan)</span>`;
                     }

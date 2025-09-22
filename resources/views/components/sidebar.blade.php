@@ -74,11 +74,11 @@
                     <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Input Data</h6>
                 </li>
 
-                <x-navlink href="{{ route('defect-inputs.index') }}"
-                           :active="request()->is('defect-inputs*')"
-                           icon="fa-solid fa-clipboard">
-                    Defect Input
-                </x-navlink>
+<x-navlink href="{{ route('defect-inputs.summary') }}"
+           :active="request()->is('defect-inputs*')"
+           icon="fa-solid fa-clipboard">
+    Defect Summary
+</x-navlink>
             </ul>
         </div>
     </div>

@@ -8,7 +8,13 @@
            style="background: linear-gradient(90deg, #4CAF50, #2E7D32); color: white;">
            <i class="bi bi-plus-circle-fill fs-6"></i> Add Data
         </a>
+        <a href="{{ route('defect-inputs.summary') }}"
+           class="btn btn-secondary btn-sm d-flex align-items-center gap-2"
+           style="height:38px;">
+           Kembali
+        </a>
     </div>
+
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
