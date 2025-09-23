@@ -62,11 +62,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-<<<<<<< HEAD
-            'model' => App\Models\Lembur\CtUser::class,
-=======
             'model' => env('AUTH_MODEL', App\Models\lembur\CtUser::class),
->>>>>>> chart-dashboard
         ],
     ],
 

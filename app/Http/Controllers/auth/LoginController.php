@@ -76,22 +76,11 @@ public function login(Request $request)
 }
 
 
-<<<<<<< HEAD
-    // Tampilkan form OTP
-    public function showOtp()
-    {
-        if (!Auth::user()) {
-            return redirect()->route('login')->withErrors(['error' => 'Sesi login expired. Silakan login ulang.']);
-        }
-
-        return view('auth.otp');
-=======
 public function showOtp()
 {
     // Kalau sudah login full, langsung ke dashboard
     if (Session::has('authenticated') && Auth::check()) {
         return redirect()->route('dashboard');
->>>>>>> chart-dashboard
     }
 
     // Kalau belum ada Auth user (misalnya session hilang)

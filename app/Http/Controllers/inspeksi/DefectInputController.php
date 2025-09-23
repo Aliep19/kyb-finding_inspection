@@ -8,10 +8,7 @@ use App\Models\SubWorkstation;
 use App\Services\Inspeksi\DefectInputService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-<<<<<<< HEAD
-=======
 use Illuminate\Support\Facades\DB;
->>>>>>> chart-dashboard
 
 class DefectInputController extends Controller
 {
@@ -84,16 +81,12 @@ class DefectInputController extends Controller
         // handle entries (default 10)
         $perPage = $request->input('per_page', 10);
 
-<<<<<<< HEAD
-        $inputs = $query->with('user')->paginate($perPage)->appends($request->all());
-=======
         $inputs = $query->with('user')
             ->when($hasDeptFilter, function ($q) {
                 return $q->select('defect_inputs.*'); // Hindari ambiguitas kolom jika ada join
             })
             ->paginate($perPage)->appends($request->all());
 
->>>>>>> chart-dashboard
         // dd(Auth::user());
         return view('defect_inputs.index', compact('inputs'));
     }
