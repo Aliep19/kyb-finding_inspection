@@ -30,7 +30,7 @@ class DashboardController extends Controller
     public function index()
     {
         // Ambil department default (misalnya id = 5)
-        $departments = Department::whereIn('id', [4, 5])->get();
+        $departments = Department::whereIn('id', [5])->get();
         $defaultDepartment = Department::find(5);
         $departmentId = $defaultDepartment ? $defaultDepartment->id : null;
 

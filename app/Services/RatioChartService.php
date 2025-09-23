@@ -12,8 +12,8 @@ class RatioChartService
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        // Selalu ambil 3 tahun terakhir
-        $years = range($currentYear, $currentYear);
+        // Selalu ambil tahun berjalan saja
+        $years = [$currentYear];
 
         // Inisialisasi array untuk average ratios tahunan
         $avgDefectRatios = [];
@@ -46,13 +46,13 @@ class RatioChartService
 
             foreach ($monthlyData as $data) {
                 $totalCheck = $data->sum_check > 0 ? $data->sum_check : 1; // Hindari division by zero
-                $monthlyDefectRatios[] = round(($data->sum_ng / $totalCheck) * 100, 2); // Dalam persen
-                $monthlyRepairRatios[] = round(($data->sum_repair / $totalCheck) * 100, 2);
-                $monthlyRejectRatios[] = round(($data->sum_reject / $totalCheck) * 100, 2);
+                $monthlyDefectRatios[$data->month] = round(($data->sum_ng / $totalCheck) * 100, 2); // Dalam persen
+                $monthlyRepairRatios[$data->month] = round(($data->sum_repair / $totalCheck) * 100, 2);
+                $monthlyRejectRatios[$data->month] = round(($data->sum_reject / $totalCheck) * 100, 2);
             }
 
             // Hitung average tahunan (average dari monthly ratios yang ada datanya)
-            $numMonthsWithData = count($monthlyDefectRatios);
+            $numMonthsWithData = count($monthlyData);
             $avgDefect = $numMonthsWithData > 0 ? round(array_sum($monthlyDefectRatios) / $numMonthsWithData, 2) : 0;
             $avgRepair = $numMonthsWithData > 0 ? round(array_sum($monthlyRepairRatios) / $numMonthsWithData, 2) : 0;
             $avgReject = $numMonthsWithData > 0 ? round(array_sum($monthlyRejectRatios) / $numMonthsWithData, 2) : 0;
@@ -89,6 +89,56 @@ class RatioChartService
             $monthlyRepairRatiosCurrent[$month] = round(($data->sum_repair / $totalCheck) * 100, 2);
             $monthlyRejectRatiosCurrent[$month] = round(($data->sum_reject / $totalCheck) * 100, 2);
         }
+
+        // Hitung persentase perbandingan untuk Defect Ratio
+        $defectComparison = null;
+        $thisMonthDefect = $monthlyDefectRatiosCurrent[$currentMonth] ?? 0;
+        $prevMonthDefect = $currentMonth > 1 ? ($monthlyDefectRatiosCurrent[$currentMonth - 1] ?? 0) : null;
+
+        if ($currentMonth > 1) {
+            if ($prevMonthDefect > 0) {
+                $defectComparison = round((($thisMonthDefect - $prevMonthDefect) / $prevMonthDefect) * 100, 2);
+            } elseif ($thisMonthDefect > 0) {
+                $defectComparison = 100; // Naik 100% jika bulan sebelumnya nol
+            } else {
+                $defectComparison = 0;
+            }
+        }
+
+        // Hitung persentase perbandingan untuk Repair Ratio
+        $repairComparison = null;
+        $thisMonthRepair = $monthlyRepairRatiosCurrent[$currentMonth] ?? 0;
+        $prevMonthRepair = $currentMonth > 1 ? ($monthlyRepairRatiosCurrent[$currentMonth - 1] ?? 0) : null;
+
+        if ($currentMonth > 1) {
+            if ($prevMonthRepair > 0) {
+                $repairComparison = round((($thisMonthRepair - $prevMonthRepair) / $prevMonthRepair) * 100, 2);
+            } elseif ($thisMonthRepair > 0) {
+                $repairComparison = 100; // Naik 100% jika bulan sebelumnya nol
+            } else {
+                $repairComparison = 0;
+            }
+        }
+
+        // Hitung persentase perbandingan untuk Reject Ratio
+        $rejectComparison = null;
+        $thisMonthReject = $monthlyRejectRatiosCurrent[$currentMonth] ?? 0;
+        $prevMonthReject = $currentMonth > 1 ? ($monthlyRejectRatiosCurrent[$currentMonth - 1] ?? 0) : null;
+
+        if ($currentMonth > 1) {
+            if ($prevMonthReject > 0) {
+                $rejectComparison = round((($thisMonthReject - $prevMonthReject) / $prevMonthReject) * 100, 2);
+            } elseif ($thisMonthReject > 0) {
+                $rejectComparison = 100; // Naik 100% jika bulan sebelumnya nol
+            } else {
+                $rejectComparison = 0;
+            }
+        }
+
+        // Nama bulan dalam bahasa Indonesia
+        Carbon::setLocale('id');
+        $thisMonthName = Carbon::now()->translatedFormat('F');
+        $prevMonthName = $currentMonth > 1 ? Carbon::now()->subMonth()->translatedFormat('F') : null;
 
         // Labels: tahun + bulan
         $labels = [];
@@ -127,7 +177,6 @@ class RatioChartService
             $rejectData[] = $month <= $currentMonth ? $monthlyRejectRatiosCurrent[$month] : null;
         }
 
-        // Warna untuk bar (misal kuning untuk tahun, abu untuk bulan, tapi karena multiple dataset, gunakan warna berbeda per dataset)
         return [
             'labels' => $labels,
             'datasets' => [
@@ -152,7 +201,28 @@ class RatioChartService
                     'backgroundColor' => '#FF0000', // Merah
                     'yAxisID' => 'y',
                 ],
-
+            ],
+            // Tambahan untuk card comparison
+            'defect' => [
+                'comparison' => $defectComparison,
+                'thisMonthValue' => $thisMonthDefect,
+                'prevMonthValue' => $prevMonthDefect,
+                'thisMonthName' => $thisMonthName,
+                'prevMonthName' => $prevMonthName,
+            ],
+            'repair' => [
+                'comparison' => $repairComparison,
+                'thisMonthValue' => $thisMonthRepair,
+                'prevMonthValue' => $prevMonthRepair,
+                'thisMonthName' => $thisMonthName,
+                'prevMonthName' => $prevMonthName,
+            ],
+            'reject' => [
+                'comparison' => $rejectComparison,
+                'thisMonthValue' => $thisMonthReject,
+                'prevMonthValue' => $prevMonthReject,
+                'thisMonthName' => $thisMonthName,
+                'prevMonthName' => $prevMonthName,
             ],
         ];
     }

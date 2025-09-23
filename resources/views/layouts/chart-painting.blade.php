@@ -95,9 +95,7 @@
             plugins: [ChartDataLabels]
         });
 
-        // Event listener untuk dropdown
-        document.getElementById('departmentFilterPainting').addEventListener('change', function () {
-            var departmentId = this.value;
+        function updateChartAndCards(departmentId) {
             fetch('/painting-ratio-chart-data' + (departmentId ? '/' + departmentId : ''), {
                 method: 'GET',
                 headers: {
@@ -107,10 +105,74 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Update chart
                 chart.data = data;
                 chart.update();
+
+                // Update Painting comparison card
+                let paintingComparison = data.painting.comparison;
+                let paintingTarget = document.getElementById('painting-comparison-card');
+
+                if (paintingComparison !== null) {
+                    if (paintingComparison > 0) {
+                        paintingTarget.innerHTML = `<span class="text-danger">${paintingComparison}% ↑</span>`;
+                    } else if (paintingComparison < 0) {
+                        paintingTarget.innerHTML = `<span class="text-success">${Math.abs(paintingComparison)}% ↓</span>`;
+                    } else {
+                        paintingTarget.innerHTML = `<span class="text-muted">0% (stagnan)</span>`;
+                    }
+                } else {
+                    paintingTarget.innerHTML = `<span class="text-muted">Data tidak tersedia</span>`;
+                }
+
+                // Update Painting month values
+                document.getElementById('painting-this-month').innerHTML =
+                    `${data.painting.thisMonthName} : <strong>${data.painting.thisMonthValue}</strong> pcs`;
+
+                if (data.painting.prevMonthValue !== null) {
+                    document.getElementById('painting-prev-month').innerHTML =
+                        `${data.painting.prevMonthName} : <strong>${data.painting.prevMonthValue}</strong> pcs`;
+                } else {
+                    document.getElementById('painting-prev-month').innerHTML = '';
+                }
+
+                // Update Not Painting comparison card
+                let notPaintingComparison = data.notPainting.comparison;
+                let notPaintingTarget = document.getElementById('not-painting-comparison-card');
+
+                if (notPaintingComparison !== null) {
+                    if (notPaintingComparison > 0) {
+                        notPaintingTarget.innerHTML = `<span class="text-danger">${notPaintingComparison}% ↑</span>`;
+                    } else if (notPaintingComparison < 0) {
+                        notPaintingTarget.innerHTML = `<span class="text-success">${Math.abs(notPaintingComparison)}% ↓</span>`;
+                    } else {
+                        notPaintingTarget.innerHTML = `<span class="text-muted">0% (stagnan)</span>`;
+                    }
+                } else {
+                    notPaintingTarget.innerHTML = `<span class="text-muted">Data tidak tersedia</span>`;
+                }
+
+                // Update Not Painting month values
+                document.getElementById('not-painting-this-month').innerHTML =
+                    `${data.notPainting.thisMonthName} : <strong>${data.notPainting.thisMonthValue}</strong> pcs`;
+
+                if (data.notPainting.prevMonthValue !== null) {
+                    document.getElementById('not-painting-prev-month').innerHTML =
+                        `${data.notPainting.prevMonthName} : <strong>${data.notPainting.prevMonthValue}</strong> pcs`;
+                } else {
+                    document.getElementById('not-painting-prev-month').innerHTML = '';
+                }
             })
             .catch(error => console.error('Error fetching painting chart data:', error));
+        }
+
+        // Event listener untuk dropdown
+        document.getElementById('departmentFilterPainting').addEventListener('change', function () {
+            updateChartAndCards(this.value);
         });
+
+        // Trigger fetch pertama kali (pakai default selected)
+        let defaultDept = document.getElementById('departmentFilterPainting').value;
+        updateChartAndCards(defaultDept);
     });
 </script>
