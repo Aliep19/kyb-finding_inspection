@@ -152,6 +152,36 @@
     </div>
   </div>
 </div>
+<!-- Card for Top 3 Workstations -->
+<div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-3">
+            <div class="row">
+                <div class="col-8">
+                    <div class="numbers">
+                        <!-- Judul -->
+                        <p class="text-xs mb-1 text-uppercase fw-bold text-muted" style="letter-spacing: .5px;">
+                            Top 3 Workstations (Defects)
+                        </p>
+                        <!-- Bulan -->
+                        <h5 class="fw-bolder mb-2 text-dark" id="top-workstations-month" style="font-size: 1rem;">
+                            <!-- Dynamic dari JS -->
+                        </h5>
+                        <!-- List Workstations -->
+                        <ul class="list-unstyled mb-0 text-secondary" id="top-workstations-list" style="font-size: .9rem; line-height: 1.6;">
+                            <li>Loading...</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-4 text-end">
+                    <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                        <i class="ni ni-chart-bar-32 text-lg opacity-10" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 

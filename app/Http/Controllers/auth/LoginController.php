@@ -15,12 +15,15 @@ use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
     // Tampilkan form login
-    public function showLogin()
-    {
-        // dd(Auth::user());
-
-        return view('auth.login');
+public function showLogin()
+{
+    // Kalau sudah login, arahkan langsung ke dashboard
+    if (Session::has('authenticated') && Auth::check()) {
+        return redirect()->route('dashboard');
     }
+
+    return view('auth.login');
+}
 
 public function login(Request $request)
 {
@@ -73,15 +76,20 @@ public function login(Request $request)
 }
 
 
-    // Tampilkan form OTP
-    public function showOtp()
-    {
-        if (!Auth::user()) {
-            return redirect()->route('login')->withErrors(['error' => 'Sesi login expired. Silakan login ulang.']);
-        }
-
-        return view('auth.otp');
+public function showOtp()
+{
+    // Kalau sudah login full, langsung ke dashboard
+    if (Session::has('authenticated') && Auth::check()) {
+        return redirect()->route('dashboard');
     }
+
+    // Kalau belum ada Auth user (misalnya session hilang)
+    if (!Auth::check()) {
+        return redirect()->route('login')->withErrors(['error' => 'Sesi login expired. Silakan login ulang.']);
+    }
+
+    return view('auth.otp');
+}
 
 public function verifyOtp(Request $request)
 {

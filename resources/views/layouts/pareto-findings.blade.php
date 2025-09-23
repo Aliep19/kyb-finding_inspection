@@ -86,15 +86,15 @@
                         color: function(context) {
                             let bgColor = context.dataset.backgroundColor;
 
-                            // kalau dataset pakai array warna (per bar)
+                            // Kalau dataset pakai array warna (per bar)
                             if (Array.isArray(bgColor)) {
                                 bgColor = bgColor[context.dataIndex];
                             }
 
-                            // default hitam kalau gagal parse
+                            // Default hitam kalau gagal parse
                             if (!bgColor) return '#000';
 
-                            // konversi HEX -> RGB
+                            // Konversi HEX -> RGB
                             function hexToRgb(hex) {
                                 hex = hex.replace(/^#/, '');
                                 if (hex.length === 3) {
@@ -110,7 +110,7 @@
 
                             const { r, g, b } = hexToRgb(bgColor);
 
-                            // hitung luminance (0 = gelap, 255 = terang)
+                            // Hitung luminance (0 = gelap, 255 = terang)
                             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
 
                             return luminance > 150 ? '#000' : '#fff';
@@ -125,15 +125,12 @@
                             return value > 0 ? value : ''; // Kalau 0 gak ditampilkan
                         }
                     }
-
                 }
             },
-            plugins: [ChartDataLabels] // aktifkan datalabels plugin
+            plugins: [ChartDataLabels]
         });
 
-        // Event listener untuk dropdown
-        document.getElementById('departmentFilterPareto').addEventListener('change', function () {
-            var departmentId = this.value;
+        function updateChartAndCard(departmentId) {
             fetch('/pareto-findings-chart-data' + (departmentId ? '/' + departmentId : ''), {
                 method: 'GET',
                 headers: {
@@ -143,11 +140,37 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Update chart
                 chart.data = data;
                 chart.update();
+
+                // Update top 3 workstations card
+                const topWorkstationsMonth = document.getElementById('top-workstations-month');
+                const topWorkstationsList = document.getElementById('top-workstations-list');
+
+                // Set month name
+                topWorkstationsMonth.innerHTML = `${data.topWorkstations.monthName} {{ date("Y") }}`;
+
+                // Update list of top 3 workstations
+                if (data.topWorkstations.workstations && data.topWorkstations.workstations.length > 0) {
+                    topWorkstationsList.innerHTML = data.topWorkstations.workstations.map(ws =>
+                        `<li>${ws.workstation}: <strong>${ws.total_ng}</strong> pcs</li>`
+                    ).join('');
+                } else {
+                    topWorkstationsList.innerHTML = '<li>Tidak ada data tersedia</li>';
+                }
             })
             .catch(error => console.error('Error fetching pareto chart data:', error));
+        }
+
+        // Event listener untuk dropdown
+        document.getElementById('departmentFilterPareto').addEventListener('change', function () {
+            updateChartAndCard(this.value);
         });
+
+        // Trigger fetch pertama kali (pakai default selected)
+        let defaultDept = document.getElementById('departmentFilterPareto').value;
+        updateChartAndCard(defaultDept);
     });
 </script>
 

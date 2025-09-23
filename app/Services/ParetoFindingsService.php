@@ -15,21 +15,21 @@ class ParetoFindingsService
         $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-        // Ambil daftar line unik (sub_workstation)
-        $lines = DefectInput::join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
+        // Ambil daftar workstation berdasarkan sect_name
+        $workstations = DefectInput::join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
             ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
             ->join('departments', 'workstations.id_dept', '=', 'departments.id')
             ->when($departmentId, function ($q) use ($departmentId) {
                 $q->where('departments.id', $departmentId);
             })
             ->distinct()
-            ->pluck('defect_inputs.line')
+            ->pluck('workstations.sect_name')
             ->toArray();
 
         $datasets = [];
 
-        foreach ($lines as $line) {
-            $lineData = [];
+        foreach ($workstations as $ws) {
+            $wsData = [];
 
             for ($month = 1; $month <= 12; $month++) {
                 $query = DefectInput::join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
@@ -37,7 +37,7 @@ class ParetoFindingsService
                     ->join('departments', 'workstations.id_dept', '=', 'departments.id')
                     ->whereYear('defect_inputs.tgl', $currentYear)
                     ->whereMonth('defect_inputs.tgl', $month)
-                    ->where('defect_inputs.line', $line);
+                    ->where('workstations.sect_name', $ws);
 
                 if ($departmentId) {
                     $query->where('departments.id', $departmentId);
@@ -46,30 +46,59 @@ class ParetoFindingsService
                 $total = $query->sum('defect_inputs.total_ng');
 
                 if ($month <= $currentMonth) {
-                    $lineData[] = (int) $total;
+                    $wsData[] = (int) $total;
                 } else {
-                    $lineData[] = null;
+                    $wsData[] = null;
                 }
             }
 
             $datasets[] = [
                 'type' => 'bar',
-                'label' => $line,
-                'data' => $lineData,
+                'label' => $ws,
+                'data' => $wsData,
                 'backgroundColor' => $this->randomColor(),
                 'yAxisID' => 'y',
             ];
         }
 
+        // Ambil top 3 workstations untuk bulan ini
+        $topWorkstationsQuery = DefectInput::join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
+            ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
+            ->join('departments', 'workstations.id_dept', '=', 'departments.id')
+            ->whereYear('defect_inputs.tgl', $currentYear)
+            ->whereMonth('defect_inputs.tgl', $currentMonth)
+            ->when($departmentId, function ($q) use ($departmentId) {
+                $q->where('departments.id', $departmentId);
+            })
+            ->groupBy('workstations.sect_name')
+            ->selectRaw('workstations.sect_name as workstation, SUM(defect_inputs.total_ng) as total_ng')
+            ->orderByDesc('total_ng')
+            ->take(3)
+            ->get();
+
+        $topWorkstations = $topWorkstationsQuery->map(function ($item) {
+            return [
+                'workstation' => $item->workstation,
+                'total_ng' => (int) $item->total_ng,
+            ];
+        })->toArray();
+
+        // Nama bulan dalam bahasa Indonesia
+        Carbon::setLocale('id');
+        $thisMonthName = Carbon::now()->translatedFormat('F');
+
         return [
             'labels' => $monthNames,
             'datasets' => $datasets,
+            'topWorkstations' => [
+                'monthName' => $thisMonthName,
+                'workstations' => $topWorkstations,
+            ],
         ];
     }
 
     private function randomColor()
     {
-        // Gunakan warna dasar saja
         $basicColors = [
             '#FF0000', // Merah
             '#00FF00', // Hijau
