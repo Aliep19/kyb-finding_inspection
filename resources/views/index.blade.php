@@ -1,3 +1,4 @@
+<!-- views/index.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,10 +11,27 @@
         @include('components.navbar', ['slot' => 'Dashboard'])
 
         <div class="container-fluid py-4">
-            <div class="row">
-                <div class="col-12 mb-4">
+            <div class="row g-4">
+                    <!-- KPI -->
+    <div class="col-lg-12">
+        @include('components.kpi', ['comparison' => $comparison])
+    </div>
+                <!-- Chart Defect (1/2 lebar) -->
+                <div class="col-lg-6 col-md-12">
                     @include('layouts.chart-defect')
                 </div>
+                <!-- Chart Painting (full row) -->
+                <div class="col-lg-6 col-md-12">
+                    @include('layouts.chart-painting')
+                </div>
+                <!-- Chart Ratio (1/2 lebar) -->
+                <div class="col-lg-12 ">
+                    @include('layouts.chart-ratio')
+                </div>
+                <div class="col-lg-12 ">
+                    @include('layouts.pareto-findings')
+                </div>
+
 
             </div>
 
@@ -21,7 +39,5 @@
         </div>
     </main>
     <x-script></x-script>
-
-
 </body>
 </html>

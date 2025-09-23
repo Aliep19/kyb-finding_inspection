@@ -6,7 +6,7 @@
         <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
             aria-hidden="true" id="iconSidenav"></i>
         <a class="navbar-brand m-0" href="{{ route('index') }}">
-            <img src="{{ url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/KYB_Corporation_company_logo.svg/2560px-KYB_Corporation_company_logo.svg.png') }}"
+            <img src="{{ asset ('img/kyb.png') }}"
                 class="navbar-brand-img h-100" alt="main_logo">
             <span class="ms-1 font-weight-bold">Kayaba Indonesia</span>
         </a>
@@ -74,11 +74,11 @@
                     <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Input Data</h6>
                 </li>
 
-                <x-navlink href="{{ route('defect-inputs.index') }}"
-                           :active="request()->is('defect-inputs*')"
-                           icon="fa-solid fa-clipboard">
-                    Defect Input
-                </x-navlink>
+<x-navlink href="{{ route('defect-inputs.summary') }}"
+           :active="request()->is('defect-inputs*')"
+           icon="fa-solid fa-clipboard">
+    Defect Summary
+</x-navlink>
             </ul>
         </div>
     </div>
@@ -88,7 +88,7 @@
         <div class="sidenav-footer mt-auto px-3 pb-3" style="width: 250px;">
             <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                 @csrf
-  g              <button type="submit"
+                <button type="submit"
                         class="btn btn-danger w-100"
                         onclick="return confirm('Apakah Anda yakin ingin logout?')">
                     <i class="fa-solid fa-door-open me-2"></i> Logout

@@ -28,10 +28,13 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-//dashboard
+
+// Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/chart-data/{departmentId?}', [DashboardController::class, 'getChartData']);
-
+Route::get('/ratio-chart-data/{departmentId?}', [DashboardController::class, 'getRatioChartData']);
+Route::get('/painting-ratio-chart-data/{departmentId?}', [DashboardController::class, 'getPaintingRatioChartData']);
+Route::get('/pareto-findings-chart-data/{departmentId?}', [DashboardController::class, 'getParetoFindingsChartData']);
 //Main Features
 Route::get('/', [MainController::class, 'index'])->name('index');
 
@@ -47,8 +50,9 @@ Route::get('/defect-subs/{id}/edit', [DefectSubController::class, 'edit'])->name
 Route::put('/defect-subs/{id}', [DefectSubController::class, 'update'])->name('defect-subs.update');
 Route::delete('/defect-subs/{id}', [DefectSubController::class, 'destroy'])->name('defect-subs.destroy');
 
-// ROUTE: Defect Input
+// routes/web.php
 Route::prefix('defect-inputs')->name('defect-inputs.')->group(function () {
+    Route::get('/summary', [DefectInputController::class, 'summary'])->name('summary');
     Route::get('/', [DefectInputController::class, 'index'])->name('index');
     Route::get('/create', [DefectInputController::class, 'create'])->name('create');
     Route::post('/', [DefectInputController::class, 'store'])->name('store');

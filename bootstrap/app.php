@@ -11,9 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+<<<<<<< HEAD
         // tambahin ke group web
         $middleware->web([
             \App\Http\Middleware\CheckSession::class,
+=======
+        $middleware->web([
+        \App\Http\Middleware\CheckSession::class,
+>>>>>>> chart-dashboard
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
