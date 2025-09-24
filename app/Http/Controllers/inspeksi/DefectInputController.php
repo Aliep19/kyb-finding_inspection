@@ -5,101 +5,50 @@ namespace App\Http\Controllers\Inspeksi;
 use App\Http\Controllers\Controller;
 use App\Models\DefectInput;
 use App\Models\SubWorkstation;
+use App\Models\DefectCategory;
+use App\Models\DefectSub;
 use App\Services\Inspeksi\DefectInputService;
+use App\Services\Inspeksi\DefectInputDetailService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class DefectInputController extends Controller
 {
-    protected $service;
+    protected $defectInputService;
+    protected $defectInputDetailService;
 
-    public function __construct(DefectInputService $service)
+    public function __construct(DefectInputService $defectInputService, DefectInputDetailService $defectInputDetailService)
     {
-        $this->service = $service;
+        $this->defectInputService = $defectInputService;
+        $this->defectInputDetailService = $defectInputDetailService;
     }
-
+    
     public function summary(Request $request)
     {
-        $currentYear = date('Y');
-
-        $query = DefectInput::select(
-            DB::raw('MONTH(tgl) as month'),
-            'departments.dept_name as dept',
-            DB::raw('SUM(total_ng) as total_ng')
-        )
-        ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
-        ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
-        ->join('departments', 'workstations.id_dept', '=', 'departments.id')
-        ->whereYear('defect_inputs.tgl', $currentYear)
-        ->groupBy('month', 'dept')
-        ->orderBy('month', 'asc');
-
-        $groups = $query->get();
-
-        // Tambahkan ID manual dan nama bulan
-        $groups->each(function ($group, $key) use ($currentYear) {
-            $group->id = $key + 1;
-            $group->bulan = date('F Y', mktime(0, 0, 0, $group->month, 1, $currentYear));
-        });
+        $groups = $this->defectInputService->getSummary();
 
         return view('defect_inputs.summary', compact('groups'));
     }
 
     public function index(Request $request)
     {
-        $query = DefectInput::orderBy('id', 'asc');
+        $inputs = $this->defectInputService->getFilteredInputs($request);
 
-        $hasDeptFilter = $request->filled('dept');
-        $hasMonthFilter = $request->filled('month');
-
-        if ($hasMonthFilter) {
-            $query->whereMonth('tgl', $request->month);
-        }
-
-        if ($hasDeptFilter) {
-            $query->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
-                  ->join('workstations', 'sub_workstations.id_workstation', '=', 'workstations.id')
-                  ->join('departments', 'workstations.id_dept', '=', 'departments.id')
-                  ->where('departments.dept_name', $request->dept);
-        }
-
-        // Handle search kalau ada
-        if ($request->filled('search')) {
-            $search = $request->search;
-
-            $query->where(function ($q) use ($search) {
-                $q->where('defect_inputs.id', 'like', "%$search%")
-                  ->orWhere('defect_inputs.npk', 'like', "%$search%")
-                  ->orWhere('defect_inputs.line', 'like', "%$search%")
-                  ->orWhere('defect_inputs.shift', 'like', "%$search%")
-                  ->orWhere('defect_inputs.tgl', 'like', "%$search%");
-                // tambahin field lain sesuai tabel DefectInput
-            });
-        }
-
-        // handle entries (default 10)
-        $perPage = $request->input('per_page', 10);
-
-        $inputs = $query->with('user')
-            ->when($hasDeptFilter, function ($q) {
-                return $q->select('defect_inputs.*'); // Hindari ambiguitas kolom jika ada join
-            })
-            ->paginate($perPage)->appends($request->all());
-
-        // dd(Auth::user());
         return view('defect_inputs.index', compact('inputs'));
     }
 
     public function create()
     {
         $lines = SubWorkstation::all();
-        return view('defect_inputs.create', compact('lines'));
+        $categories = DefectCategory::all();
+        $subsByCategory = DefectSub::all()->groupBy('id_defect_category');
+
+        return view('defect_inputs.create', compact('lines', 'categories', 'subsByCategory'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Validate DefectInput data
+        $validatedInput = $request->validate([
             'tgl'   => 'required|date',
             'shift' => 'required|string',
             'npk'   => 'required|string',
@@ -108,27 +57,80 @@ class DefectInputController extends Controller
             'lot'   => 'nullable|string',
             'kayaba_no' => 'nullable|string',
             'total_check' => 'required|integer|min:0',
-            'total_ng'    => 'required|integer|min:0',
             'ok'          => 'nullable|integer|min:0',
             'reject'      => 'nullable|integer|min:0',
             'repair'      => 'nullable|integer|min:0',
+            'keterangan' => 'nullable|string',
+
         ]);
 
-        $this->service->create($validated);
+        // Validate DefectInputDetail data
+        $validatedDetails = $request->validate([
+            'defect_category_id' => 'nullable|array',
+            'defect_category_id.*' => 'nullable|exists:defect_categories,id',
+            'defect_sub_id' => 'nullable|array',
+            'defect_sub_id.*' => 'nullable|exists:defect_subs,id',
+            'jumlah_defect' => 'nullable|array',
+            'jumlah_defect.*' => 'nullable|integer|min:0',
+        ]);
 
-        return redirect()->route('defect-inputs.index')
-            ->with('success', 'Defect Input berhasil ditambahkan!');
+        // Calculate total_ng from jumlah_defect, default to 0 if empty
+        $totalNg = !empty($validatedDetails['jumlah_defect']) && is_array($validatedDetails['jumlah_defect'])
+            ? array_sum(array_filter($validatedDetails['jumlah_defect'], fn($value) => is_numeric($value)))
+            : 0;
+        $validatedInput['total_ng'] = $totalNg;
+
+        // Validate total_ng <= total_check
+        if ($totalNg > $validatedInput['total_check']) {
+            return back()->withErrors(['total_ng' => 'Total NG tidak boleh melebihi Total Check!'])->withInput();
+        }
+
+        // Validate reject + repair = total_ng
+        $reject = $validatedInput['reject'] ?? 0;
+        $repair = $validatedInput['repair'] ?? 0;
+        if ($reject + $repair !== $totalNg) {
+            return back()->withErrors(['reject' => 'Total Reject + Repair harus sama dengan Total NG (' . $totalNg . ')!'])->withInput();
+        }
+
+        // Save DefectInput
+        $defectInput = $this->defectInputService->create($validatedInput);
+
+        // Save DefectInputDetail only if defect_category_id is not empty and valid
+        if (!empty($validatedDetails['defect_category_id'])) {
+            foreach ($validatedDetails['defect_category_id'] as $index => $categoryId) {
+                // Skip if categoryId or subId is empty or jumlah_defect is not valid
+                if (empty($categoryId) || empty($validatedDetails['defect_sub_id'][$index]) || !isset($validatedDetails['jumlah_defect'][$index])) {
+                    continue;
+                }
+
+                $detailData = [
+                    'defect_input_id' => $defectInput->id,
+                    'defect_category_id' => $categoryId,
+                    'defect_sub_id' => $validatedDetails['defect_sub_id'][$index],
+                    'jumlah_defect' => $validatedDetails['jumlah_defect'][$index] ?? 0,
+                ];
+
+                $this->defectInputDetailService->create($detailData);
+            }
+        }
+
+        return redirect()->route('defect-inputs.summary')
+            ->with('success', 'Defect Input dan Details berhasil ditambahkan!');
     }
 
     public function edit(DefectInput $defectInput)
     {
         $lines = SubWorkstation::all();
-        return view('defect_inputs.edit', compact('defectInput','lines'));
+        $categories = DefectCategory::all();
+        $subsByCategory = DefectSub::all()->groupBy('id_defect_category');
+
+        return view('defect_inputs.edit', compact('defectInput', 'lines', 'categories', 'subsByCategory'));
     }
 
     public function update(Request $request, DefectInput $defectInput)
     {
-        $validated = $request->validate([
+        // Validate DefectInput data
+        $validatedInput = $request->validate([
             'tgl'   => 'required|date',
             'shift' => 'required|string',
             'npk'   => 'required|string',
@@ -137,15 +139,63 @@ class DefectInputController extends Controller
             'lot'   => 'nullable|string',
             'kayaba_no' => 'nullable|string',
             'total_check' => 'required|integer|min:0',
-            'total_ng'    => 'required|integer|min:0',
             'ok'          => 'nullable|integer|min:0',
             'reject'      => 'nullable|integer|min:0',
             'repair'      => 'nullable|integer|min:0',
+            'keterangan' => 'nullable|string',
         ]);
 
-        $this->service->update($defectInput, $validated);
+        // Validate DefectInputDetail data
+        $validatedDetails = $request->validate([
+            'defect_category_id' => 'nullable|array',
+            'defect_category_id.*' => 'nullable|exists:defect_categories,id',
+            'defect_sub_id' => 'nullable|array',
+            'defect_sub_id.*' => 'nullable|exists:defect_subs,id',
+            'jumlah_defect' => 'nullable|array',
+            'jumlah_defect.*' => 'nullable|integer|min:0',
+        ]);
 
-        return redirect()->route('defect-inputs.index')
+        // Calculate total_ng from jumlah_defect
+        $totalNg = !empty($validatedDetails['jumlah_defect']) && is_array($validatedDetails['jumlah_defect'])
+            ? array_sum(array_filter($validatedDetails['jumlah_defect'], fn($value) => is_numeric($value)))
+            : 0;
+        $validatedInput['total_ng'] = $totalNg;
+
+        // Validate total_ng <= total_check
+        if ($totalNg > $validatedInput['total_check']) {
+            return back()->withErrors(['total_ng' => 'Total NG tidak boleh melebihi Total Check!'])->withInput();
+        }
+
+        // Validate reject + repair = total_ng
+        $reject = $validatedInput['reject'] ?? 0;
+        $repair = $validatedInput['repair'] ?? 0;
+        if ($reject + $repair !== $totalNg) {
+            return back()->withErrors(['reject' => 'Total Reject + Repair harus sama dengan Total NG (' . $totalNg . ')!'])->withInput();
+        }
+
+        // Update DefectInput
+        $this->defectInputService->update($defectInput, $validatedInput);
+
+        // Delete existing details and recreate
+        $defectInput->details()->delete();
+        if (!empty($validatedDetails['defect_category_id'])) {
+            foreach ($validatedDetails['defect_category_id'] as $index => $categoryId) {
+                if (empty($categoryId) || empty($validatedDetails['defect_sub_id'][$index]) || !isset($validatedDetails['jumlah_defect'][$index])) {
+                    continue;
+                }
+
+                $detailData = [
+                    'defect_input_id' => $defectInput->id,
+                    'defect_category_id' => $categoryId,
+                    'defect_sub_id' => $validatedDetails['defect_sub_id'][$index],
+                    'jumlah_defect' => $validatedDetails['jumlah_defect'][$index] ?? 0,
+                ];
+
+                $this->defectInputDetailService->create($detailData);
+            }
+        }
+
+        return redirect()->route('defect-inputs.summary')
             ->with('success', 'Data berhasil diperbarui!');
     }
 

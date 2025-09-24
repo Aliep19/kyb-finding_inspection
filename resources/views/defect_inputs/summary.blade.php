@@ -3,11 +3,18 @@
 
 @section('content')
 <x-card title="Defect Summary" icon="fa-solid fa-clipboard">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ route('defect-inputs.create') }}"
+           class="btn btn-gradient btn-sm d-flex align-items-center gap-2"
+           style="background: linear-gradient(90deg, #4CAF50, #2E7D32); color: white;">
+           <i class="bi bi-plus-circle-fill fs-6"></i> Add Data
+        </a>
+        </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <table class="table table-hover table-custom align-middle">
+    <table class="sortable table table-hover table-custom align-middle">
         <thead>
             <tr>
                 <th>No</th>

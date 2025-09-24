@@ -10,7 +10,7 @@
 
     {{-- Main Content --}}
     <main class="main-content position-relative max-height-vh-100 h-100 mt-1 border-radius-lg ">
-    <link rel="stylesheet" href="{{ asset('css/table.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/table.css') }}?v={{ time() }}">
 
         {{-- Navbar --}}
         <x-navbar>{{ $title ?? 'Dashboard' }}</x-navbar>

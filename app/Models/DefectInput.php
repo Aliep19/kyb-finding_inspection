@@ -10,7 +10,7 @@ class DefectInput extends Model
     protected $primaryKey = 'id';
     protected $fillable = [
         'id_defect','tgl','shift','npk','line','marking_number','lot',
-        'kayaba_no','total_check','ok','total_ng','reject','repair'
+        'kayaba_no','total_check','ok','total_ng','reject','repair', 'keterangan'
     ];
 
     public function details()

@@ -63,12 +63,9 @@ Route::prefix('defect-inputs')->name('defect-inputs.')->group(function () {
 });
 
 Route::prefix('defect-input-details')->name('defect-input-details.')->group(function () {
-    Route::get('/{defectInput}/create', [DefectInputDetailController::class, 'create'])->name('create');
-    Route::post('/{defectInput}', [DefectInputDetailController::class, 'store'])->name('store');
+    Route::get('/{defectInput}', [DefectInputDetailController::class, 'index'])->name('index');
     Route::get('/{defectInput}/{detail}/edit', [DefectInputDetailController::class, 'edit'])->name('edit');
     Route::put('/{defectInput}/{detail}', [DefectInputDetailController::class, 'update'])->name('update');
-    Route::delete('/{defectInput}/{detail}', [DefectInputDetailController::class, 'destroy'])->name('destroy');
-    Route::get('/{defectInput}', [DefectInputDetailController::class, 'index'])->name('index');
 });
 
 //target

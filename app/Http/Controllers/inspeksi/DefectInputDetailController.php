@@ -28,43 +28,6 @@ class DefectInputDetailController extends Controller
         return view('defect_inputs_details.index', compact('details','defectInput'));
     }
 
-    public function create(DefectInput $defectInput)
-    {
-        $categories = DefectCategory::all();
-        $subs = DefectSub::all();
-        return view('defect_inputs_details.create', compact('defectInput','categories','subs'));
-    }
-
-    public function store(Request $request, DefectInput $defectInput)
-    {
-        $validated = $request->validate([
-            'defect_category_id' => 'required|array',
-            'defect_category_id.*' => 'exists:defect_categories,id',
-            'defect_sub_id' => 'required|array',
-            'defect_sub_id.*' => 'exists:defect_subs,id',
-            'jumlah_defect' => 'required|array',
-            'jumlah_defect.*' => 'integer|min:0',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        foreach ($validated['defect_category_id'] as $index => $categoryId) {
-            $data = [
-                'defect_input_id' => $defectInput->id,
-                'defect_category_id' => $categoryId,
-                'defect_sub_id' => $validated['defect_sub_id'][$index],
-                'jumlah_defect' => $validated['jumlah_defect'][$index],
-                'keterangan' => $validated['keterangan'] ?? null,
-            ];
-
-            $this->service->create($data);
-        }
-
-        return redirect()
-            ->route('defect-input-details.index', $defectInput->id)
-            ->with('success', 'Beberapa defect berhasil ditambahkan!');
-    }
-
-
     public function edit(DefectInput $defectInput, DefectInputDetail $detail)
     {
         $categories = DefectCategory::all();
@@ -75,29 +38,16 @@ class DefectInputDetailController extends Controller
     public function update(Request $request, DefectInput $defectInput, DefectInputDetail $detail)
     {
         $validated = $request->validate([
-            'defect_category_id' => 'required|exists:defect_categories,id',
-            'defect_sub_id'      => 'required|exists:defect_subs,id',
-            'jumlah_defect'      => 'required|integer|min:0',
-            'keterangan'         => 'nullable|string',
+            'keterangan' => 'nullable|in:repair,reject,',
         ]);
 
-        $this->service->update($detail,$validated);
+        $this->service->update($detail, $validated);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+        }
 
         return redirect()->route('defect-input-details.index', $defectInput->id)
             ->with('success','Data berhasil diperbarui!');
     }
-
-    public function destroy(DefectInput $defectInput, DefectInputDetail $detail)
-    {
-        // pastikan detail memang milik defectInput (safety)
-        if ($detail->defect_input_id != $defectInput->id) {
-            return redirect()->route('defect-input-details.index', $defectInput->id)
-                ->with('error', 'Detail tidak ditemukan untuk header ini.');
-        }
-
-        $detail->delete();
-        return redirect()->route('defect-input-details.index', $defectInput->id)
-            ->with('success','Data berhasil dihapus!');
-    }
-
 }

@@ -16,6 +16,7 @@
     padding-left: 6px;
 }
 
+
 </style>
 @section('content')
 <x-card title="Defect Inputs" icon="fa-solid fa-clipboard">
@@ -38,17 +39,17 @@
     @endif
 
     <x-search-page />
-<table class="table table-hover table-custom align-middle">
+<table class="sortable table table-hover table-custom align-middle" >
     <thead>
         <tr>
             <th>No</th>
             <th>Tanggal</th>
             <th>Shift</th>
-            <th>NPK</th>
             <th>Line</th>
             <th>Total Check</th>
             <th>OK</th>
             <th>Total NG</th>
+            <th>Defect Detail</th>
             <th style="width:200px">Aksi</th>
         </tr>
     </thead>
@@ -58,21 +59,11 @@
                 <td>{{ $loop->iteration + ($inputs->firstItem()-1) }}</td>
                 <td>{{ $input->tgl }}</td>
                 <td>{{ $input->shift }}</td>
-                <td>
-                    <div class="d-flex flex-column align-items-start">
-                        <span class="fw-bold text-danger fs-6">{{ $input->npk }}</span>
-                        <span class="badge bg-gradient-primary text-white mt-1 px-2 py-1"
-                              data-bs-toggle="tooltip"
-                              title="{{ $input->user->full_name ?? '-' }}">
-                            <i class="fa fa-user me-1"></i>
-                            {{ explode(' ', $input->user->full_name ?? '-')[0] }}
-                        </span>
-                    </div>
-                </td>
                 <td>{{ $input->line }}</td>
                 <td>{{ $input->total_check }}</td>
                 <td>{{ $input->ok }}</td>
                 <td>{{ $input->total_ng }}</td>
+                <td>{{ $input->details()->count() }}</td>
                 <td class="text-center">
                     <a href="{{ route('defect-input-details.index', $input->id) }}"
                        class="badge bg-gradient-primary border-0 shadow-sm"
@@ -121,47 +112,64 @@
             <!-- Kiri -->
             <div class="col-md-6">
                 <div class="info-item">
+                    <i class="fa fa-calendar-alt me-2 text-primary"></i>
                     <span class="fw-semibold">Tanggal:</span> {{ $input->tgl }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-moon me-2 text-info"></i>
                     <span class="fw-semibold">Shift:</span> {{ $input->shift }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-id-card me-2 text-danger"></i>
                     <span class="fw-semibold">NPK:</span> {{ $input->npk }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-user me-2 text-success"></i>
                     <span class="fw-semibold">Nama:</span> {{ $input->user->full_name ?? '-' }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-stream me-2 text-warning"></i>
                     <span class="fw-semibold">Line:</span> {{ $input->line }}
+                </div>
+                <div class="info-item">
+                    <i class="fa fa-hashtag me-2 text-secondary"></i>
+                    <span class="fw-semibold">Marking Number:</span> {{ $input->marking_number ?? '-' }}
+                </div>
+                <div class="info-item">
+                    <i class="fa fa-boxes me-2 text-primary"></i>
+                    <span class="fw-semibold">Lot:</span> {{ $input->lot ?? '-' }}
                 </div>
             </div>
 
             <!-- Kanan -->
             <div class="col-md-6">
                 <div class="info-item">
-                    <span class="fw-semibold">Marking Number:</span> {{ $input->marking_number ?? '-' }}
-                </div>
-                <div class="info-item">
-                    <span class="fw-semibold">Lot:</span> {{ $input->lot ?? '-' }}
-                </div>
-                <div class="info-item">
+                    <i class="fa fa-barcode me-2 text-info"></i>
                     <span class="fw-semibold">Kayaba No:</span> {{ $input->kayaba_no ?? '-' }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-tasks me-2 text-success"></i>
                     <span class="fw-semibold">Total Check:</span> {{ $input->total_check }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-check-circle me-2 text-success"></i>
                     <span class="fw-semibold">OK:</span> {{ $input->ok ?? '-' }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-times-circle me-2 text-danger"></i>
                     <span class="fw-semibold">Total NG:</span> {{ $input->total_ng }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-ban me-2 text-danger"></i>
                     <span class="fw-semibold">Reject:</span> {{ $input->reject ?? '-' }}
                 </div>
                 <div class="info-item">
+                    <i class="fa fa-tools me-2 text-warning"></i>
                     <span class="fw-semibold">Repair:</span> {{ $input->repair ?? '-' }}
+                </div>
+                <div class="info-item">
+                    <i class="fa fa-comment-dots me-2 text-secondary"></i>
+                    <span class="fw-semibold">Keterangan:</span> {{ $input->keterangan ?? '-' }}
                 </div>
             </div>
         </div>
