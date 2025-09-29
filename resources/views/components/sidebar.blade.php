@@ -18,7 +18,16 @@
     <div class="sidenav-menu flex-grow-1 overflow-auto">
         <div class="collapse navbar-collapse" id="sidenav-collapse-main" style="width: 250px;">
             <ul class="navbar-nav">
+                <li class="nav-item mt-3">
+                    <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Overview</h6>
+                </li>
                 <x-navlink href="{{ route('dashboard') }}" :active="request()->is('/') " icon="fa-house">Dashboard</x-navlink>
+                <x-navlink href="{{ route('monitoring', ['departmentId' => null]) }}"
+                        :active="request()->is('monitoring*')"
+                        icon="fa-tv">
+                    Monitoring
+                </x-navlink>
+
 
                 <li class="nav-item mt-3">
                     <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Master Menu</h6>

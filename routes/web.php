@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Inspeksi\DefectInputController;
 use App\Http\Controllers\Inspeksi\DefectInputDetailController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -71,3 +72,14 @@ Route::prefix('defect-input-details')->name('defect-input-details.')->group(func
 //target
 Route::resource('targets', TargetController::class);
 
+// web.php
+
+// Monitoring
+Route::get('/monitoring/{departmentId?}', [MonitoringController::class, 'index'])->name('monitoring');
+Route::get('/asakai/{departmentId?}', [MonitoringController::class, 'index'])->name('asakai');
+Route::get('/monitoring/chart-data/{departmentId?}', [MonitoringController::class, 'getChartData'])->name('monitoring.chart-data');
+Route::get('/monitoring/ratio-chart-data/{departmentId?}', [MonitoringController::class, 'getRatioChartData'])->name('monitoring.ratio-chart-data');
+Route::get('/monitoring/painting-ratio-chart-data/{departmentId?}', [MonitoringController::class, 'getPaintingRatioChartData'])->name('monitoring.painting-ratio-chart-data');
+Route::get('/monitoring/pareto-findings-chart-data/{departmentId?}', [MonitoringController::class, 'getParetoFindingsChartData'])->name('monitoring.pareto-findings-chart-data');
+// Tambahkan rute baru untuk Pareto Defect Findings
+Route::get('/monitoring/pareto-defect-findings-data/{departmentId?}', [MonitoringController::class, 'getParetoDefectFindingsData'])->name('monitoring.pareto-defect-findings-data');

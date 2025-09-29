@@ -86,6 +86,9 @@
                                             <button type="submit" class="btn bg-gradient-danger text-white">
                                                 Login
                                             </button>
+                                            <a href="{{ route('monitoring') }}" class="btn btn-warning mt-2">
+                                                Monitoring
+                                            </a>
                                         </div>
                                     </form>
                                 </div>

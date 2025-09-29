@@ -22,7 +22,11 @@ class CheckSession
             'otp',
             'otp/*',
             'request-new-otp',
-            'captcha*', // supaya gambar captcha bisa di-load
+            'captcha*',
+            'monitoring/*',
+            'monitoring',
+            'asakai', // supaya gambar captcha bisa di-load
+            'asakai/*',
         ];
 
         // Jika request cocok dengan route pengecualian, lewati middleware
