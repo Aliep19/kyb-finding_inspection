@@ -156,21 +156,21 @@ class ParetoProblemService
     ];
 
     // For list and grouping (top 6)
-    $top6 = array_slice($overallDefects, 0, 6, true);
-    $groups = [];
-    $rank = 1;
-    foreach ($top6 as $defectName => $data) {
-        $category = strtoupper($data['category']); // Use category for grouping instead of main_ws
-        $suffix = ($rank == 1) ? 'st' : (($rank == 2) ? 'nd' : (($rank == 3) ? 'rd' : 'th'));
-        $groups[$category][] = $rank . $suffix;
-        $rank++;
-    }
+$top6 = array_slice($overallDefects, 0, 6, true);
+$groups = [];
+$rank = 1;
+foreach ($top6 as $defectName => $data) {
+    $workstation = strtoupper($data['main_ws']); // Group by main workstation
+    $suffix = ($rank == 1) ? 'st' : (($rank == 2) ? 'nd' : (($rank == 3) ? 'rd' : 'th'));
+    $groups[$workstation][] = $rank . $suffix;
+    $rank++;
+}
 
-    // Format groups
-    $formattedGroups = [];
-    foreach ($groups as $category => $ranks) {
-        $formattedGroups[] = $category . ': ' . implode(', ', $ranks);
-    }
+// Format groups
+$formattedGroups = [];
+foreach ($groups as $workstation => $ranks) {
+    $formattedGroups[] = $workstation . ': ' . implode(', ', $ranks);
+}
 
     // Pie data
     $pieData = [

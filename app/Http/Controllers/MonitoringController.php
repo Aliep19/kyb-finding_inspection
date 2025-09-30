@@ -7,6 +7,7 @@ use App\Services\RatioChartService;
 use App\Services\PaintingRatioChartService;
 use App\Services\ParetoFindingsService;
 use App\Services\ParetoProblemService;
+use App\Services\ParetoAssemblingService;
 use App\Models\Department;
 use Illuminate\Http\Request;
 
@@ -17,24 +18,27 @@ class MonitoringController extends Controller
     protected $paintingRatioChartService;
     protected $paretoFindingsService;
     protected $paretoProblemService;
+    protected $paretoAssemblingService;
 
     public function __construct(
         ChartService $chartService,
         RatioChartService $ratioChartService,
         PaintingRatioChartService $paintingRatioChartService,
         ParetoFindingsService $paretoFindingsService,
-        ParetoProblemService $paretoProblemService
+        ParetoProblemService $paretoProblemService,
+        ParetoAssemblingService $paretoAssemblingService
     ) {
         $this->chartService = $chartService;
         $this->ratioChartService = $ratioChartService;
         $this->paintingRatioChartService = $paintingRatioChartService;
         $this->paretoFindingsService = $paretoFindingsService;
         $this->paretoProblemService = $paretoProblemService;
+        $this->paretoAssemblingService = $paretoAssemblingService;
     }
 
     public function index($departmentId = null)
     {
-        $departments = Department::whereIn('id', [5])->get(); // Sesuaikan ID dept
+        $departments = Department::whereIn('id', [5])->get();
         $defaultDepartment = Department::find(5);
         $departmentId = $departmentId ?? ($defaultDepartment ? $defaultDepartment->id : null);
 
@@ -43,6 +47,8 @@ class MonitoringController extends Controller
         $paintingRatioChartData = $this->paintingRatioChartService->getPaintingRatioChartData($departmentId);
         $paretoFindingsChartData = $this->paretoFindingsService->getParetoFindingsByLine($departmentId);
         $paretoProblemChartData = $this->paretoProblemService->getParetoProblems($departmentId);
+        $paretoAssemblingChartData = $this->paretoAssemblingService->getTop3ParetoAssembling($departmentId);
+        $paretoAssemblingDetails = $this->paretoAssemblingService->getTop3DefectDetails($departmentId);
 
         return view('monitoring.index', compact(
             'chartData',
@@ -50,6 +56,8 @@ class MonitoringController extends Controller
             'paintingRatioChartData',
             'paretoFindingsChartData',
             'paretoProblemChartData',
+            'paretoAssemblingChartData',
+            'paretoAssemblingDetails',
             'departments',
             'defaultDepartment',
             'departmentId'
@@ -79,5 +87,15 @@ class MonitoringController extends Controller
     public function getParetoProblemChartData($departmentId = null)
     {
         return response()->json($this->paretoProblemService->getParetoProblems($departmentId));
+    }
+
+    public function getParetoAssemblingChartData($departmentId = null)
+    {
+        return response()->json($this->paretoAssemblingService->getTop3ParetoAssembling($departmentId));
+    }
+
+    public function getParetoAssemblingDetails($departmentId = null)
+    {
+        return response()->json($this->paretoAssemblingService->getTop3DefectDetails($departmentId));
     }
 }

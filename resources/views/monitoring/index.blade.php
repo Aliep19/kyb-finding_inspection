@@ -33,7 +33,7 @@
      @endif
 >
 
-    <div id="menuCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="10000">
+    <div id="menuCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="20000">
         <div class="carousel-inner">
 
             <!-- 🔹 Slide 1 -->
@@ -79,7 +79,10 @@
                         <img class="bg-white p-1 rounded" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
                     </div>
                 </div>
-                </div>
+                @include('monitoring.pareto_assembling')
+                @include('monitoring.detail_pareto')
+
+
             </div>
 
         </div>
@@ -96,4 +99,6 @@
     </div>
 </div>
 
+
 <x-script></x-script>
+

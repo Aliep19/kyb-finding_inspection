@@ -37,7 +37,7 @@
 <style>
     .pie-wrapper {
         position: relative;
-        width: 180px;
+        width: 200px;
         height: 200px;
         border-radius: 50%;
         margin-top: 10px;
