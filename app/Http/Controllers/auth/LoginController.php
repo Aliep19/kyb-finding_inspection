@@ -40,6 +40,10 @@ public function login(Request $request)
     if (!$user || !Hash::check($request->password, $user->pwd)) {
         return redirect()->back()->withErrors(['error' => 'NPK atau password salah.']);
     }
+        //  Dept Akses Login
+    if (!in_array(strtoupper($user->dept), ['MIS', 'CQE'])) {
+        return redirect()->back()->withErrors(['error' => 'Anda tidak memiliki izin login.']);
+    }
 
     // Cek apakah NPK ada di tabel hp (DB isd)
     $hpData = Hp::where('npk', $request->npk)->first();

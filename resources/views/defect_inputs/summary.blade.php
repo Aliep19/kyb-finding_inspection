@@ -1,15 +1,25 @@
-{{-- resources/views/defect_inputs/summary.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
 <x-card title="Defect Summary" icon="fa-solid fa-clipboard">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ route('defect-inputs.create') }}"
            class="btn btn-gradient btn-sm d-flex align-items-center gap-2"
            style="background: linear-gradient(90deg, #4CAF50, #2E7D32); color: white;">
            <i class="bi bi-plus-circle-fill fs-6"></i> Add Data
         </a>
-        </div>
+
+        <!-- 🔹 Filter Tahun -->
+        <form action="{{ route('defect-inputs.summary') }}" method="GET" class="d-flex align-items-center gap-2">
+            <label for="year" class="fw-bold mb-0">Tahun:</label>
+            <select name="year" id="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                @foreach($years as $y)
+                    <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

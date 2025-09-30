@@ -21,13 +21,19 @@ class DefectInputController extends Controller
         $this->defectInputService = $defectInputService;
         $this->defectInputDetailService = $defectInputDetailService;
     }
-    
-    public function summary(Request $request)
-    {
-        $groups = $this->defectInputService->getSummary();
 
-        return view('defect_inputs.summary', compact('groups'));
-    }
+public function summary(Request $request)
+{
+    $year = $request->input('year', now()->year);
+
+    $groups = $this->defectInputService->getSummary($year);
+
+    // daftar tahun untuk dropdown (misal 5 tahun terakhir + tahun sekarang)
+    $years = range(now()->year, now()->year - 5);
+
+    return view('defect_inputs.summary', compact('groups', 'year', 'years'));
+}
+
 
     public function index(Request $request)
     {

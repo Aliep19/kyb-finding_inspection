@@ -4,9 +4,9 @@
         <h6 class="mb-0 text-white fw-bold">
             <i class="fa fa-chart-bar me-2"></i> {{ $paretoFindingsChartData['paretoDefects']['title'] }}
         </h6>
-        <select id="legendType" class="form-select form-select-sm w-auto">
+        <select id="legendType" class="form-select form-select-sm " style="width: 120px;">
+           <option value="workstations">Workstations</option>
             <option value="defects">Defects</option>
-            <option value="workstations">Workstations</option>
         </select>
     </div>
     <div class="card-body bg-light flex-grow-1 d-flex flex-column" style="height: 420px;">
@@ -56,7 +56,7 @@
                         position: 'top',
                         labels: {
                             generateLabels: function(chart) {
-                                return {!! json_encode($paretoFindingsChartData['legend']['defects']) !!};
+                                return {!! json_encode($paretoFindingsChartData['legend']['workstations']) !!};
                             }
                         }
                     },

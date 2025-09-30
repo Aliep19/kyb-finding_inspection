@@ -99,6 +99,11 @@
     </div>
 </div>
 
+<script>
+    setInterval(function() {
+        location.reload();
+    }, 60000); // 10000 ms = 10 detik
+</script>
 
 <x-script></x-script>
 
