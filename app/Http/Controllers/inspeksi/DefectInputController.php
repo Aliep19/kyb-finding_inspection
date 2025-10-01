@@ -134,76 +134,99 @@ public function summary(Request $request)
     }
 
     public function update(Request $request, DefectInput $defectInput)
-    {
-        // Validate DefectInput data
-        $validatedInput = $request->validate([
-            'tgl'   => 'required|date',
-            'shift' => 'required|string',
-            'npk'   => 'required|string',
-            'line'  => 'required|string',
-            'marking_number' => 'nullable|string',
-            'lot'   => 'nullable|string',
-            'kayaba_no' => 'nullable|string',
-            'total_check' => 'required|integer|min:0',
-            'ok'          => 'nullable|integer|min:0',
-            'reject'      => 'nullable|integer|min:0',
-            'repair'      => 'nullable|integer|min:0',
-            'keterangan' => 'nullable|string',
-        ]);
+{
+    // Validate DefectInput data
+    $validatedInput = $request->validate([
+        'tgl'   => 'required|date',
+        'shift' => 'required|string',
+        'npk'   => 'required|string',
+        'line'  => 'required|string',
+        'marking_number' => 'nullable|string',
+        'lot'   => 'nullable|string',
+        'kayaba_no' => 'nullable|string',
+        'total_check' => 'required|integer|min:0',
+        'ok'          => 'nullable|integer|min:0',
+        'reject'      => 'nullable|integer|min:0',
+        'repair'      => 'nullable|integer|min:0',
+        'keterangan' => 'nullable|string',
+    ]);
 
-        // Validate DefectInputDetail data
-        $validatedDetails = $request->validate([
-            'defect_category_id' => 'nullable|array',
-            'defect_category_id.*' => 'nullable|exists:defect_categories,id',
-            'defect_sub_id' => 'nullable|array',
-            'defect_sub_id.*' => 'nullable|exists:defect_subs,id',
-            'jumlah_defect' => 'nullable|array',
-            'jumlah_defect.*' => 'nullable|integer|min:0',
-        ]);
+    // Validate DefectInputDetail data (tanpa keterangan)
+    $validatedDetails = $request->validate([
+        'defect_category_id' => 'nullable|array',
+        'defect_category_id.*' => 'nullable|exists:defect_categories,id',
+        'defect_sub_id' => 'nullable|array',
+        'defect_sub_id.*' => 'nullable|exists:defect_subs,id',
+        'jumlah_defect' => 'nullable|array',
+        'jumlah_defect.*' => 'nullable|integer|min:0',
+    ]);
 
-        // Calculate total_ng from jumlah_defect
-        $totalNg = !empty($validatedDetails['jumlah_defect']) && is_array($validatedDetails['jumlah_defect'])
-            ? array_sum(array_filter($validatedDetails['jumlah_defect'], fn($value) => is_numeric($value)))
-            : 0;
-        $validatedInput['total_ng'] = $totalNg;
+    // Calculate total_ng from jumlah_defect
+    $totalNg = !empty($validatedDetails['jumlah_defect']) && is_array($validatedDetails['jumlah_defect'])
+        ? array_sum(array_filter($validatedDetails['jumlah_defect'], fn($value) => is_numeric($value)))
+        : 0;
+    $validatedInput['total_ng'] = $totalNg;
 
-        // Validate total_ng <= total_check
-        if ($totalNg > $validatedInput['total_check']) {
-            return back()->withErrors(['total_ng' => 'Total NG tidak boleh melebihi Total Check!'])->withInput();
-        }
+    // Validate total_ng <= total_check
+    if ($totalNg > $validatedInput['total_check']) {
+        return back()->withErrors(['total_ng' => 'Total NG tidak boleh melebihi Total Check!'])->withInput();
+    }
 
-        // Validate reject + repair = total_ng
-        $reject = $validatedInput['reject'] ?? 0;
-        $repair = $validatedInput['repair'] ?? 0;
-        if ($reject + $repair !== $totalNg) {
-            return back()->withErrors(['reject' => 'Total Reject + Repair harus sama dengan Total NG (' . $totalNg . ')!'])->withInput();
-        }
+    // Validate reject + repair = total_ng
+    $reject = $validatedInput['reject'] ?? 0;
+    $repair = $validatedInput['repair'] ?? 0;
+    if ($reject + $repair !== $totalNg) {
+        return back()->withErrors(['reject' => 'Total Reject + Repair harus sama dengan Total NG (' . $totalNg . ')!'])->withInput();
+    }
 
-        // Update DefectInput
-        $this->defectInputService->update($defectInput, $validatedInput);
+    // Update DefectInput
+    $this->defectInputService->update($defectInput, $validatedInput);
 
-        // Delete existing details and recreate
-        $defectInput->details()->delete();
-        if (!empty($validatedDetails['defect_category_id'])) {
-            foreach ($validatedDetails['defect_category_id'] as $index => $categoryId) {
-                if (empty($categoryId) || empty($validatedDetails['defect_sub_id'][$index]) || !isset($validatedDetails['jumlah_defect'][$index])) {
-                    continue;
-                }
+    // Ambil semua detail yang sudah ada untuk defect_input_id ini
+    $existingDetails = $defectInput->details()->get()->keyBy(function ($item) {
+        return $item->defect_category_id . '-' . $item->defect_sub_id; // Key unik berdasarkan kombinasi category dan sub
+    });
 
-                $detailData = [
-                    'defect_input_id' => $defectInput->id,
-                    'defect_category_id' => $categoryId,
-                    'defect_sub_id' => $validatedDetails['defect_sub_id'][$index],
-                    'jumlah_defect' => $validatedDetails['jumlah_defect'][$index] ?? 0,
-                ];
+    // Proses detail baru dari input
+    $processedKeys = [];
+    if (!empty($validatedDetails['defect_category_id'])) {
+        foreach ($validatedDetails['defect_category_id'] as $index => $categoryId) {
+            if (empty($categoryId) || empty($validatedDetails['defect_sub_id'][$index]) || !isset($validatedDetails['jumlah_defect'][$index])) {
+                continue;
+            }
 
+            $key = $categoryId . '-' . $validatedDetails['defect_sub_id'][$index];
+            $processedKeys[] = $key;
+
+            $detailData = [
+                'defect_input_id' => $defectInput->id,
+                'defect_category_id' => $categoryId,
+                'defect_sub_id' => $validatedDetails['defect_sub_id'][$index],
+                'jumlah_defect' => $validatedDetails['jumlah_defect'][$index] ?? 0,
+                // Tidak menyertakan keterangan agar tidak diubah
+            ];
+
+            // Jika detail sudah ada, update hanya jumlah_defect; jika tidak, buat baru
+            if (isset($existingDetails[$key])) {
+                $this->defectInputDetailService->update($existingDetails[$key], [
+                    'jumlah_defect' => $detailData['jumlah_defect'],
+                ]);
+            } else {
                 $this->defectInputDetailService->create($detailData);
             }
         }
-
-        return redirect()->route('defect-inputs.summary')
-            ->with('success', 'Data berhasil diperbarui!');
     }
+
+    // Hapus detail yang tidak ada di input baru
+    foreach ($existingDetails as $key => $detail) {
+        if (!in_array($key, $processedKeys)) {
+            $detail->delete();
+        }
+    }
+
+    return redirect()->route('defect-inputs.summary')
+        ->with('success', 'Data berhasil diperbarui!');
+}
 
     public function destroy(DefectInput $defectInput)
     {
