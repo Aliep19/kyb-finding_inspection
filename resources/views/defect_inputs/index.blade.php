@@ -20,7 +20,21 @@
 </style>
 @section('content')
 <x-card title="Defect Inputs" icon="fa-solid fa-clipboard">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="row align-items-center mb-3">
+    <!-- Kolom kiri: Filter -->
+    <div class="col-md-6">
+        <form method="GET" action="{{ route('defect-inputs.index') }}" class="d-inline">
+            <label for="filter" class="me-2 fw-semibold">Filter:</label>
+            <select name="filter" id="filter" onchange="this.form.submit()"
+                    class="form-select form-select-sm d-inline w-20">
+                <option value="today" {{ $filter == 'today' ? 'selected' : '' }}>Today</option>
+                <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>All Days</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Kolom kanan: Tombol aksi -->
+    <div class="col-md-6 d-flex justify-content-end gap-2">
         <a href="{{ route('defect-inputs.create') }}"
            class="btn btn-gradient btn-sm d-flex align-items-center gap-2"
            style="background: linear-gradient(90deg, #4CAF50, #2E7D32); color: white;">
@@ -32,6 +46,8 @@
            Kembali
         </a>
     </div>
+</div>
+
 
 
     @if(session('success'))

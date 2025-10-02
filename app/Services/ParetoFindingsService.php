@@ -11,8 +11,8 @@ class ParetoFindingsService
 {
     protected $workstationColors = [];
     protected $defectColorMap = [
-        'repair'     => '#abbbf0ff',
-        'reject'     => '#f65a5af4',
+        'repair'     => '#0027a8ff',
+        'reject'     => '#bc0000f4',
     ];
 
     public function __construct()
