@@ -11,6 +11,8 @@ use App\Models\DefectSub;
 use App\Services\Inspeksi\DefectInputService;
 use App\Services\Inspeksi\DefectInputDetailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class DefectInputController extends Controller
 {
@@ -23,35 +25,49 @@ class DefectInputController extends Controller
         $this->defectInputDetailService = $defectInputDetailService;
     }
 
-public function summary(Request $request)
-{
-    $year = $request->input('year', now()->year);
+    public function summary(Request $request)
+    {
+        $year = $request->input('year', now()->year);
 
-    $groups = $this->defectInputService->getSummary($year);
+        $groups = $this->defectInputService->getSummary($year);
 
-    // daftar tahun untuk dropdown (misal 5 tahun terakhir + tahun sekarang)
-    $years = range(now()->year, now()->year - 5);
+        // daftar tahun untuk dropdown (misal 5 tahun terakhir + tahun sekarang)
+        $years = range(now()->year, now()->year - 5);
 
-    return view('defect_inputs.summary', compact('groups', 'year', 'years'));
-}
-
-
-public function index(Request $request)
-{
-    // Ambil query input filter
-    $filter = $request->get('filter', 'today'); // default 'today'
-
-    $query = \App\Models\DefectInput::query();
-
-    if ($filter === 'today') {
-        $query->whereDate('tgl', now()->toDateString());
+        return view('defect_inputs.summary', compact('groups', 'year', 'years'));
     }
 
-    $inputs = $query->latest()->paginate(10);
+    public function index(Request $request)
+    {
+        // Ambil query input filter & search
+        $filter = $request->get('filter', 'today'); // default 'today'
+        $search = $request->get('search'); // keyword pencarian
 
-    return view('defect_inputs.index', compact('inputs', 'filter'));
-}
+        $query = \App\Models\DefectInput::query();
 
+        // Filter berdasarkan tanggal (opsional)
+        if ($filter === 'today') {
+            $query->whereDate('tgl', now()->toDateString());
+        }
+
+        // 🔎 Tambahin fitur search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', $search) // cari by ID
+                  ->orWhere('tgl', 'like', "%{$search}%")
+                  ->orWhere('shift', 'like', "%{$search}%")
+                  ->orWhere('npk', 'like', "%{$search}%")
+                  ->orWhere('line', 'like', "%{$search}%")
+                  ->orWhere('marking_number', 'like', "%{$search}%")
+                  ->orWhere('lot', 'like', "%{$search}%");
+            });
+        }
+
+        // Urutkan & paginate dengan eager loading untuk details dan sub (relasi DefectSub)
+        $inputs = $query->with(['details.sub'])->latest()->paginate(10);
+
+        return view('defect_inputs.index', compact('inputs', 'filter', 'search'));
+    }
 
     public function create()
     {
@@ -145,15 +161,79 @@ public function index(Request $request)
     }
 
     public function update(Request $request, $defectInputId, DefectInputDetail $detail)
-{
-    $validated = $request->validate([
-        'keterangan' => 'nullable|in:repair,reject'
-    ]);
+    {
+        $validated = $request->validate([
+            'keterangan' => 'nullable|in:repair,reject'
+        ]);
 
+        try {
+            $this->defectInputDetailService->update($detail, $validated);
+            return back()->with('success', 'Detail berhasil diperbarui!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+    }
+    public function uploadPica(Request $request, DefectInput $defectInput, DefectInputDetail $detail)
+{
     try {
-        $this->defectInputDetailService->update($detail, $validated);
-        return back()->with('success', 'Detail berhasil diperbarui!');
-    } catch (\Illuminate\Validation\ValidationException $e) {
+        $request->validate([
+            'pica' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+        ]);
+
+        // Refresh model biar updated_at fresh
+        $detail->refresh();
+
+        // Logic lock: Cek apakah bisa edit (selalu bisa kalau belum ada pica, atau <=30 menit dari updated_at)
+        if ($detail->pica && $detail->pica_uploaded_at && now()->diffInMinutes($detail->pica_uploaded_at, false) > 30) {
+            throw ValidationException::withMessages([
+                'pica' => 'PICA terkunci setelah 30 menit dari upload awal. Edit tidak dapat dilakukan.'
+            ]);
+        }
+
+
+        // Hapus PICA lama jika ada
+        if ($detail->pica) {
+            Storage::disk('public')->delete($detail->pica);
+        }
+
+        // Upload file baru ke storage/app/public/pica
+        $path = $request->file('pica')->store('pica', 'public');
+
+        // Update pica dan touch updated_at
+        $detail->pica = $path;
+        $detail->pica = $path; // Set updated_at ke now()
+        $detail->save();
+
+        return back()->with('success', 'PICA berhasil diupload dan diperbarui!');
+    } catch (ValidationException $e) {
+        return back()->withErrors($e->errors())->withInput();
+    }
+}
+
+public function deletePica(DefectInput $defectInput, DefectInputDetail $detail)
+{
+    try {
+        // Refresh model biar data paling baru
+        $detail->refresh();
+
+        // Logic lock: cuma bisa hapus kalau <= 30 menit dari upload awal
+        if ($detail->pica && $detail->pica_uploaded_at && now()->diffInMinutes($detail->pica_uploaded_at, false) > 30) {
+            throw ValidationException::withMessages([
+                'pica' => 'PICA terkunci setelah 30 menit dari upload awal. Hapus tidak dapat dilakukan.'
+            ]);
+        }
+
+        // Hapus file dari storage
+        if ($detail->pica) {
+            Storage::disk('public')->delete($detail->pica);
+        }
+
+        // Reset pica tapi JANGAN reset pica_uploaded_at (biar tetap kunci permanen)
+        $detail->pica = null;
+        $detail->save();
+
+        return back()->with('success', 'PICA berhasil dihapus!');
+    } catch (ValidationException $e) {
         return back()->withErrors($e->errors())->withInput();
     }
 }

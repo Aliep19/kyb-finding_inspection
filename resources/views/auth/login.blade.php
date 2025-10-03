@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <x-head></x-head>
 
-<body>
+<body class="bg-light">
     <main class="main-content mt-0">
         <section>
-            <div class="page-header min-vh-100 d-flex align-items-center justify-content-center">
+            <div class="page-header min-vh-100 d-flex align-items-center justify-content-center bg-gradient">
                 <div class="container">
                     <div class="row justify-content-center">
 
                         {{-- Logo --}}
-                        <div class="col-12 text-center mb-3">
+                        <div class="col-12 text-center mb-4">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/KYB_Corporation_company_logo.svg/2560px-KYB_Corporation_company_logo.svg.png"
-                                style="height: 50px; width: auto;">
+                                style="height: 60px; width: auto;">
                         </div>
 
                         {{-- Box Login --}}
-                        <div class="col-xl-4 col-lg-5 col-md-6">
-                            <div class="card shadow-lg border-0 rounded-4 p-4">
-                                <div class="card-header text-center bg-transparent pb-2">
+                        <div class="col-xl-5 col-lg-6 col-md-8">
+                            <div class="card shadow-lg border-0 rounded-4 p-4 bg-white">
+                                <div class="card-header text-center bg-transparent pb-3">
                                     <h4 class="fw-bold text-danger mb-0">Sistem Finding Defect</h4>
                                 </div>
 
@@ -105,6 +104,20 @@
 
     <x-script></x-script>
 
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+
+        .bg-gradient {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .card {
+            max-width: 500px;
+        }
+    </style>
+
     <script>
         // Toggle Password
         document.getElementById('togglePassword').addEventListener('click', function () {
@@ -118,13 +131,12 @@
             toggleIcon.classList.toggle('fa-eye-slash');
         });
 
-
         // Refresh Captcha
         function refreshCaptcha() {
             const img = document.getElementById('captcha-img');
             img.style.opacity = "0.5";
             setTimeout(() => {
-                img.src = "{{ captcha_src('clear_numeric') }}" + "?_=" + Date.now();
+                img.src = "{{ captcha_src('numeric') }}" + "?_=" + Date.now();
                 img.onload = () => { img.style.opacity = "1"; }
             }, 200);
         }

@@ -4,6 +4,7 @@ namespace App\Services\Inspeksi;
 
 use App\Models\DefectInput;
 use App\Models\DefectInputDetail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class DefectInputDetailService
@@ -44,4 +45,24 @@ class DefectInputDetailService
         $detail->update($data);
         return $detail;
     }
+ public function uploadPica(DefectInputDetail $detail, string $filePath): DefectInputDetail
+{
+    // Hapus PICA lama kalau ada
+    if ($detail->pica) {
+        Storage::disk('public')->delete($detail->pica);
+    }
+
+    // Update dengan path baru
+    $detail->pica = $filePath;
+
+    // Kalau belum pernah upload, set timestamp awal
+    if (!$detail->pica_uploaded_at) {
+        $detail->pica_uploaded_at = now();
+    }
+
+    $detail->save();
+
+    return $detail;
+}
+
 }

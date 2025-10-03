@@ -13,11 +13,22 @@ return [
     //     'encrypt' => false,
     // ],
     'numeric' => [
-    'length' => 5,
-    'width' => 140,
+    'length' => 5,                       // 5 digit biar konsisten
+    'width' => 160,
     'height' => 50,
     'quality' => 100,
-    'characters' => ['0','1','2','3','4','5','6','7','8','9'], // hanya angka
+    'characters' => ['0','1','2','3','4','5','6','7','8','9'],
+    'lines' => 2,                        // cukup 2 garis pengganggu
+    'bgImage' => false,                  // jangan pakai background gambar
+    'bgColor' => '#ffffff',              // background putih bersih
+    'fontColors' => [
+        '#FF0000', '#007BFF', '#28A745', // merah, biru, hijau
+        '#000000', '#6C757D'             // hitam, abu gelap
+    ],                                   // warna font variatif tapi tetap kontras
+    'contrast' => 0,                     // no effect
+    'sharpen' => 0,                      // no effect
+    'blur' => 0,                         // no blur biar tajam
+
 ],
 
     'math' => [

@@ -61,6 +61,8 @@ Route::prefix('defect-inputs')->name('defect-inputs.')->group(function () {
     Route::put('/{defectInput}', [DefectInputController::class, 'update'])->name('update');
     Route::delete('/{defectInput}', [DefectInputController::class, 'destroy'])->name('destroy');
     Route::get('/{defectInput}', [DefectInputController::class, 'show'])->name('show');
+    Route::post('/{defectInput}/details/{detail}/upload-pica', [DefectInputController::class, 'uploadPica'])->name('upload-pica');
+    Route::delete('/{defectInput}/details/{detail}/delete-pica', [DefectInputController::class, 'deletePica'])->name('delete-pica');
 });
 
 Route::prefix('defect-input-details')->name('defect-input-details.')->group(function () {
