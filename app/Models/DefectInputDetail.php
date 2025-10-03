@@ -9,7 +9,11 @@ class DefectInputDetail extends Model
     protected $table = 'defect_input_details';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'defect_input_id','defect_category_id','defect_sub_id','jumlah_defect','keterangan'
+        'defect_input_id','defect_category_id','defect_sub_id','jumlah_defect','keterangan','pica','pica_uploaded_at'
+    ];
+    protected $casts = [
+        // pica tetep string (varchar), nggak perlu casts
+        'pica_uploaded_at' => 'datetime',  // Auto-cast timestamp ke Carbon
     ];
 
     public function defectInput()

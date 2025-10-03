@@ -3,7 +3,7 @@
 @section('content')
 <x-card title="Detail Defect - {{ $defectInput->id_defect }}" icon="fa-solid fa-list">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        
+
         <a href="{{ route('defect-inputs.index') }}"            class="btn btn-secondary btn-sm d-flex align-items-center gap-2"
            style="height:38px;">
            Kembali</a>
@@ -12,6 +12,15 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
     <x-search-page />
+@if($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
  <table class="table table-hover table-custom align-middle">
     <thead>
@@ -63,4 +72,3 @@
     });
 </script>
 @endpush
-
