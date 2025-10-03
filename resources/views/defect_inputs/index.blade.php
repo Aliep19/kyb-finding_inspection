@@ -297,10 +297,17 @@
                                 <p class="text-muted mb-3">Total Defect Details: {{ $allDetails->count() }} | Uploaded PICA: {{ $allDetails->whereNotNull('pica')->count() }}</p>
                                 <div class="pica-grid">
                                     @foreach($allDetails as $detail)
-@php
-    $canEditPica = !$detail->pica || ($detail->pica_uploaded_at && now()->diffInMinutes($detail->pica_uploaded_at, false) <= 30);
-    $uploadTime = $detail->pica_uploaded_at ? $detail->pica_uploaded_at->format('d/m/Y H:i') : 'N/A';
-@endphp
+                            @php
+                                // Null-safe: Pastiin pica_uploaded_at adalah Carbon atau null
+                                $picaUploadedAt = $detail->pica_uploaded_at instanceof \Carbon\Carbon
+                                    ? $detail->pica_uploaded_at
+                                    : null;
+
+                                $canEditPica = !$detail->pica ||
+                                            ($picaUploadedAt && now()->diffInMinutes($picaUploadedAt, false) <= 30);
+
+                                $uploadTime = $picaUploadedAt ? $picaUploadedAt->format('d/m/Y H:i') : 'N/A';
+                            @endphp
 
                                     <div class="pica-item">
                                         <div class="defect-sub-name">

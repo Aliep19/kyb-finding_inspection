@@ -151,144 +151,147 @@
 
     {{-- Script untuk hitung Total NG, OK, dan validasi Reject + Repair --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const totalCheck = document.querySelector('input[name="total_check"]');
-            const totalNg = document.getElementById('total_ng');
-            const ok = document.getElementById('ok');
-            const reject = document.querySelector('input[name="reject"]');
-            const repair = document.querySelector('input[name="repair"]');
-            const detailContainer = document.getElementById('detail-container');
-            const subsByCategory = @json($subsByCategory);
+    document.addEventListener('DOMContentLoaded', function () {
+        const totalCheck = document.querySelector('input[name="total_check"]');
+        const totalNg = document.getElementById('total_ng');
+        const ok = document.getElementById('ok');
+        const reject = document.querySelector('input[name="reject"]');
+        const repair = document.querySelector('input[name="repair"]');
+        const detailContainer = document.getElementById('detail-container');
+        const subsByCategory = @json($subsByCategory);
+        // Kirim data defect_sub_id dari PHP ke JavaScript
+        const defectSubIds = @json($defectDetails->pluck('defect_sub_id')->toArray());
 
-            // Fungsi untuk menghitung Total NG
-            function calculateTotalNG() {
-                const jumlahDefects = document.querySelectorAll('.jumlah-defect');
-                let total = 0;
-                jumlahDefects.forEach(input => {
-                    total += parseInt(input.value) || 0;
+        // Fungsi untuk menghitung Total NG
+        function calculateTotalNG() {
+            const jumlahDefects = document.querySelectorAll('.jumlah-defect');
+            let total = 0;
+            jumlahDefects.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            totalNg.value = total;
+            calculateOK();
+        }
+
+        // Fungsi untuk menghitung OK
+        function calculateOK() {
+            const check = parseInt(totalCheck.value) || 0;
+            const ng = parseInt(totalNg.value) || 0;
+            const result = check - ng;
+            ok.value = result >= 0 ? result : 0;
+        }
+
+        // Fungsi untuk mengisi sub-select berdasarkan kategori
+        function populateSubSelect(categorySelect, subSelect, selectedSubId = '') {
+            const catId = categorySelect.value;
+            subSelect.innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
+            if (subsByCategory[catId]) {
+                subsByCategory[catId].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.jenis_defect;
+                    if (sub.id == selectedSubId) {
+                        option.selected = true;
+                    }
+                    subSelect.appendChild(option);
                 });
-                totalNg.value = total;
-                calculateOK();
             }
+        }
 
-            // Fungsi untuk menghitung OK
-            function calculateOK() {
-                const check = parseInt(totalCheck.value) || 0;
-                const ng = parseInt(totalNg.value) || 0;
-                const result = check - ng;
-                ok.value = result >= 0 ? result : 0;
+        // Event listener untuk Total Check
+        totalCheck.addEventListener('input', calculateOK);
+
+        // Event listener untuk input jumlah_defect
+        detailContainer.addEventListener('input', function (e) {
+            if (e.target.classList.contains('jumlah-defect')) {
+                calculateTotalNG();
             }
+        });
 
-            // Fungsi untuk validasi Reject + Repair
-            function validateRejectRepair() {
-                const ng = parseInt(totalNg.value) || 0;
-                const rej = parseInt(reject.value) || 0;
-                const rep = parseInt(repair.value) || 0;
-                return rej + rep === ng;
+        // Event listener untuk Reject dan Repair
+        reject.addEventListener('input', calculateOK);
+        repair.addEventListener('input', calculateOK);
+
+        // Tambah baris defect
+        document.getElementById('add-row').addEventListener('click', function () {
+            let newRow = detailContainer.querySelector('.detail-row').cloneNode(true);
+            newRow.querySelectorAll('input, select').forEach(el => el.value = '');
+            newRow.querySelector('.sub-select').innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
+            detailContainer.appendChild(newRow);
+        });
+
+        // Event listener untuk change kategori
+        detailContainer.addEventListener('change', function (e) {
+            if (e.target.classList.contains('category-select')) {
+                const row = e.target.closest('.detail-row');
+                const subSelect = row.querySelector('.sub-select');
+                populateSubSelect(e.target, subSelect);
             }
+        });
 
-            // Event listener untuk Total Check
-            totalCheck.addEventListener('input', calculateOK);
-
-            // Event listener untuk input jumlah_defect
-            detailContainer.addEventListener('input', function (e) {
-                if (e.target.classList.contains('jumlah-defect')) {
+        // Hapus baris defect
+        detailContainer.addEventListener('click', function (e) {
+            if (e.target.closest('.remove-row')) {
+                let row = e.target.closest('.detail-row');
+                let rows = document.querySelectorAll('.detail-row');
+                if (rows.length > 1) {
+                    row.remove();
+                    calculateTotalNG();
+                } else {
+                    row.querySelectorAll('input, select').forEach(el => el.value = '');
+                    row.querySelector('.sub-select').innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
                     calculateTotalNG();
                 }
-            });
-
-            // Event listener untuk Reject dan Repair
-            reject.addEventListener('input', calculateOK);
-            repair.addEventListener('input', calculateOK);
-
-            // Tambah baris defect
-            document.getElementById('add-row').addEventListener('click', function () {
-                let newRow = detailContainer.querySelector('.detail-row').cloneNode(true);
-                newRow.querySelectorAll('input, select').forEach(el => el.value = '');
-                newRow.querySelector('.sub-select').innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
-                detailContainer.appendChild(newRow);
-            });
-
-            // Event listener untuk change kategori (isi sub defect)
-            document.addEventListener('change', function (e) {
-                if (e.target.classList.contains('category-select')) {
-                    let row = e.target.closest('.detail-row');
-                    let catId = e.target.value;
-                    let subSelect = row.querySelector('.sub-select');
-                    subSelect.innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
-                    if (subsByCategory[catId]) {
-                        subsByCategory[catId].forEach(sub => {
-                            let option = document.createElement('option');
-                            option.value = sub.id;
-                            option.textContent = sub.jenis_defect;
-                            subSelect.appendChild(option);
-                        });
-                    }
-                }
-            });
-
-            // Hapus baris defect
-            document.addEventListener('click', function (e) {
-                if (e.target.closest('.remove-row')) {
-                    let row = e.target.closest('.detail-row');
-                    let rows = document.querySelectorAll('.detail-row');
-                    if (rows.length > 1) {
-                        row.remove();
-                        calculateTotalNG();
-                    } else {
-                        // Jika hanya satu baris, kosongkan input di baris tersebut
-                        row.querySelectorAll('input, select').forEach(el => el.value = '');
-                        row.querySelector('.sub-select').innerHTML = '<option value="">-- Pilih Jenis Defect --</option>';
-                        calculateTotalNG();
-                    }
-                }
-            });
-
-            // Validasi saat submit form
-            document.querySelector('form').addEventListener('submit', function (e) {
-                const ng = parseInt(totalNg.value) || 0;
-                const check = parseInt(totalCheck.value) || 0;
-                const rej = parseInt(reject.value) || 0;
-                const rep = parseInt(repair.value) || 0;
-
-                if (ng > check) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Total NG tidak boleh melebihi Total Check!',
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#d33'
-                    });
-                    return;
-                }
-
-                if (rej + rep !== ng) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: `Total Reject + Repair harus sama dengan Total NG (${ng})!`,
-                        confirmButtonText: 'OK',
-                        confirmButtonColor: '#d33'
-                    });
-                    return;
-                }
-            });
-
-            // Inisialisasi awal: Hitung Total NG dan OK
-            calculateTotalNG();
-
-            // Inisialisasi ulang dropdown sub-defect untuk data yang sudah ada
-            document.querySelectorAll('.category-select').forEach((select, index) => {
-                if (select.value) {
-                    let event = new Event('change');
-                    select.dispatchEvent(event); // Trigger change untuk isi sub-select
-                    let subSelect = select.closest('.detail-row').querySelector('.sub-select');
-                    subSelect.value = '{{ old('defect_sub_id.' . $i, isset($defectDetails[$i]) ? $defectDetails[$i]->defect_sub_id : '') }}'; // Set nilai sub
-                }
-            });
+            }
         });
-    </script>
+
+        // Validasi saat submit form
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const ng = parseInt(totalNg.value) || 0;
+            const check = parseInt(totalCheck.value) || 0;
+            const rej = parseInt(reject.value) || 0;
+            const rep = parseInt(repair.value) || 0;
+
+            if (ng > check) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Total NG tidak boleh melebihi Total Check!',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            if (rej + rep !== ng) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: `Total Reject + Repair harus sama dengan Total NG (${ng})!`,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+        });
+
+        // Inisialisasi awal: Hitung Total NG dan OK
+        calculateTotalNG();
+
+        // Inisialisasi ulang dropdown sub-defect untuk data yang sudah ada
+        document.querySelectorAll('.detail-row').forEach((row, index) => {
+            const categorySelect = row.querySelector('.category-select');
+            const subSelect = row.querySelector('.sub-select');
+            // Gunakan defectSubIds dari array yang dihasilkan oleh PHP
+            const selectedSubId = defectSubIds[index] || '';
+
+            if (categorySelect.value) {
+                populateSubSelect(categorySelect, subSelect, selectedSubId);
+            }
+        });
+    });
+</script>
 </x-card>
 @endsection
