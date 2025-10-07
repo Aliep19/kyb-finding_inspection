@@ -93,9 +93,10 @@ class ParetoAssemblingService
             })
             ->whereYear('defect_inputs.tgl', $currentYear)
             ->whereMonth('defect_inputs.tgl', $currentMonth)
-            ->groupBy('workstations.sect_name')
             ->select('workstations.sect_name')
+            ->distinct()
             ->get();
+
 
         $defectDetails = [];
         foreach ($workstations as $workstation) {

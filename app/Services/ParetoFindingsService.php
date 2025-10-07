@@ -118,7 +118,14 @@ class ParetoFindingsService
             workstations.sect_name,
             defect_input_details.keterangan')
 
-            ->groupBy('defect_input_details.defect_category_id', 'defect_input_details.defect_sub_id', 'workstations.sect_name', 'defect_input_details.keterangan')
+            ->groupBy(
+    'defect_input_details.defect_category_id',
+    'defect_input_details.defect_sub_id',
+    'workstations.sect_name',
+    'defect_input_details.keterangan',
+    'defect_subs.jenis_defect'
+)
+
             ->orderByDesc('total')
             ->get();
 

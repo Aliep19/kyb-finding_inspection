@@ -61,13 +61,13 @@
                         }
                     },
                     datalabels: {
-                        anchor: 'end',
-                        align: 'end',
+                        anchor: 'middle',
+                        align: 'middle',
                         font: {
                             weight: 'bold',
-                            size: 10
+                            size: 14
                         },
-                        color: '#000',
+                        color: 'white',
                         formatter: function(value) {
                             return value;
                         }

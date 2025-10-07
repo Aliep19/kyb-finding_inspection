@@ -149,15 +149,29 @@
             options: {
                 maintainAspectRatio: false,
                 responsive: true,
-                scales: { x: { beginAtZero: true } },
+                scales: {
+                    x: {
+                        stacked: true,   // aktifkan stacked
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 60,
+                            minRotation: 30
+                        }
+                    },
+                    y: {
+                        stacked: true,   // aktifkan stacked
+                        beginAtZero: true
+                    }
+                }
+                ,
                 indexAxis: 'x',
                 plugins: {
                     legend: { display: true, labels: { font: { size: 10 } } },
                     datalabels: {
                         display: (context) => context.dataset.type !== 'line', // hanya bar
-                        anchor: 'end',
+                        anchor: 'middle',
                         align: 'middle', // supaya muncul di tengah bar
-                        font: { size: 10, weight: 'bold' },
+                        font: { size: 14, weight: 'bold' },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 }

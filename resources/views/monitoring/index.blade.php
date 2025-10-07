@@ -3,27 +3,46 @@
 <style>
     /* 🔹 Fix tinggi tiap slide supaya nggak naik turun */
     #menuCarousel .carousel-item {
-        min-height: 100vh; /* fullscreen tinggi, bisa diganti 800px sesuai kebutuhan */
+        min-height: 100vh;
     }
 
-    /* 🔹 Paksa tombol navigasi selalu di tengah */
+    /* 🔹 Tombol navigasi tetap di tengah secara vertikal dan nempel di pinggir */
     #menuCarousel .carousel-control-prev,
     #menuCarousel .carousel-control-next {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         height: auto;
+        width: 5%; /* lebih kecil biar gak nutup elemen */
+        z-index: 1000;
     }
 
-    /* 🔹 Ensure cards are evenly spaced and full height */
-    .card {
-        border: 1px solid #ddd;
+    #menuCarousel .carousel-control-prev {
+        left: 0; /* nempel di kiri layar */
     }
-    .card-header {
-        background: linear-gradient(90deg, #dc3545, #c82333); /* Custom gradient for consistency */
+
+    #menuCarousel .carousel-control-next {
+        right: 0; /* nempel di kanan layar */
     }
-    .overflow-auto {
-        overflow-y: auto;
+
+    /* 🔹 Styling icon navigasi */
+    #menuCarousel .carousel-control-prev-icon,
+    #menuCarousel .carousel-control-next-icon {
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        padding: 12px;
+    }
+
+    /* 🔹 Hilangkan shadow hitam di area tombol biar bersih */
+    #menuCarousel .carousel-control-prev,
+    #menuCarousel .carousel-control-next {
+        background: none;
+    }
+
+    /* 🔹 Hover efek biar tombol lebih jelas */
+    #menuCarousel .carousel-control-prev:hover .carousel-control-prev-icon,
+    #menuCarousel .carousel-control-next:hover .carousel-control-next-icon {
+        background-color: rgba(220, 53, 69, 0.8); /* warna merah KYB */
     }
 </style>
 
@@ -38,27 +57,32 @@
 
             <!-- 🔹 Slide 1 -->
             <div class="carousel-item active">
-                <div class="row bg-danger p-0 align-items-center">
-                    <h1 class="col-8 mb-0 text-white">
-                        Final Inspection Finding - {{ \Carbon\Carbon::now()->format('F Y') }}
-                    </h1>
-                    <div class="col-4 d-flex justify-content-end align-items-center" style="padding-right: 40px;">
-                        <img class="bg-white p-1 rounded" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    {{-- Header Card --}}
+                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                        <h1 class="col-8 mb-0 text-white ps-4 py-3">
+                            Final Inspection Finding - {{ \Carbon\Carbon::now()->format('F Y') }}
+                        </h1>
+                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
+                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                        </div>
                     </div>
                 </div>
-
                 @include('monitoring.chart')
                 @include('monitoring.stats')
             </div>
 
             <!-- 🔹 Slide 2 -->
             <div class="carousel-item">
-                <div class="row bg-danger p-0 align-items-center">
-                    <h1 class="col-9 mb-0 text-white">Pareto FI Finding by Problem - {{ \Carbon\Carbon::now()->format('F Y') }}
-                    </h1>
-                    <div class="col-3 text-right d-flex justify-content-end align-items-center" style="padding-right: 40px;">
-
-                        <img class="bg-white p-1 rounded" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    {{-- Header Card --}}
+                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                                    <h1 class="col-8 mb-0 text-white ps-4 py-3">
+                                        Pareto FI Finding by Problem - {{ \Carbon\Carbon::now()->format('F Y') }}
+                                    </h1>
+                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
+                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                        </div>
                     </div>
                 </div>
                 @include('monitoring.pareto')
@@ -71,12 +95,15 @@
             </div>
             <!-- 🔹 Slide 3 -->
             <div class="carousel-item">
-                <div class="row bg-danger p-0 align-items-center">
-                    <h1 class="col-9 mb-0 text-white">Pareto FI Finding by LINE - {{ \Carbon\Carbon::now()->format('F Y') }}
-                    </h1>
-                    <div class="col-3 text-right d-flex justify-content-end align-items-center" style="padding-right: 40px;">
-
-                        <img class="bg-white p-1 rounded" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    {{-- Header Card --}}
+                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                            <h1 class="col-8 mb-0 text-white ps-4 py-3">
+                                Pareto FI Finding by LINE - {{ \Carbon\Carbon::now()->format('F Y') }}
+                            </h1>
+                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
+                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
+                        </div>
                     </div>
                 </div>
                 @include('monitoring.pareto_assembling')
@@ -102,7 +129,7 @@
 <script>
     setInterval(function() {
         location.reload();
-    }, 60000); // 10000 ms = 10 detik
+    }, 600000);
 </script>
 
 <x-script></x-script>
