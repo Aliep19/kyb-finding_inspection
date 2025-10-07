@@ -14,7 +14,12 @@
             {{-- Shift --}}
             <div class="col-md-4 mb-3">
                 <label>Shift</label>
-                <input type="text" name="shift" class="form-control" value="{{ old('shift') }}" required>
+                <select name="shift" class="form-select" required>
+                    <option value="">-- Pilih Shift --</option>
+                    <option value="1" {{ old('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
+                    <option value="2" {{ old('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
+                    <option value="3" {{ old('shift') == '3' ? 'selected' : '' }}>Shift 3</option>
+                </select>
             </div>
 
             {{-- NPK (hidden dari session) --}}

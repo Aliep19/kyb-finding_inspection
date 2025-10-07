@@ -254,7 +254,7 @@ class DefectInputController extends Controller
     return redirect()->route('defect-inputs.summary')
         ->with('success', 'Data berhasil diperbarui!');
 }
-    public function uploadPica(Request $request, DefectInput $defectInput, DefectInputDetail $detail)
+public function uploadPica(Request $request, DefectInput $defectInput, DefectInputDetail $detail)
 {
     try {
         $request->validate([
@@ -263,8 +263,9 @@ class DefectInputController extends Controller
 
         $detail->refresh();
 
-        // Logic lock (udah ada, tapi sekarang aman karena casts)
-        if ($detail->pica && $detail->pica_uploaded_at && now()->diffInMinutes($detail->pica_uploaded_at, false) > 30) {
+        $lockMinutes = 30; // Normal: 30. Testing: 1
+
+        if (!$detail->canEditPica($lockMinutes)) {
             throw ValidationException::withMessages([
                 'pica' => 'PICA terkunci setelah 30 menit dari upload awal. Edit tidak dapat dilakukan.'
             ]);
@@ -278,38 +279,37 @@ class DefectInputController extends Controller
         // Upload baru
         $path = $request->file('pica')->store('pica', 'public');
 
-        // Set pica DAN timestamp (timestamp disimpen sebagai string di DB, casts handle Carbon)
         $detail->pica = $path;
-        $detail->pica_uploaded_at = now();  // Carbon instance, Laravel simpen ke DB sebagai timestamp string
+        $detail->pica_uploaded_at = now(); // Auto timezone
         $detail->save();
 
         return back()->with('success', 'PICA berhasil diupload dan diperbarui!');
     } catch (ValidationException $e) {
         return back()->withErrors($e->errors())->withInput();
     }
+    
 }
 
 public function deletePica(DefectInput $defectInput, DefectInputDetail $detail)
 {
     try {
-        // Refresh model biar data paling baru
         $detail->refresh();
 
-        // Logic lock: cuma bisa hapus kalau <= 30 menit dari upload awal
-        if ($detail->pica && $detail->pica_uploaded_at && now()->diffInMinutes($detail->pica_uploaded_at, false) > 30) {
+        $lockMinutes = 30; // Sama
+
+        if (!$detail->canEditPica($lockMinutes)) {
             throw ValidationException::withMessages([
                 'pica' => 'PICA terkunci setelah 30 menit dari upload awal. Hapus tidak dapat dilakukan.'
             ]);
         }
 
-        // Hapus file dari storage
+        // Hapus file
         if ($detail->pica) {
             Storage::disk('public')->delete($detail->pica);
         }
 
-        // Reset pica tapi JANGAN reset pica_uploaded_at (biar tetap kunci permanen)
         $detail->pica = null;
-        $detail->save();
+        $detail->save(); // Timestamp tetep
 
         return back()->with('success', 'PICA berhasil dihapus!');
     } catch (ValidationException $e) {

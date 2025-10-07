@@ -266,115 +266,141 @@
             <i class="bi bi-x-circle me-1"></i> Close
         </button>
     </div>
-</div>
+        </div>
+        </div>
+    </div>
 
-                </div>
+{{-- Updated Modal for PICA (per row) - Sudah fix upload/replace --}}
+<div class="modal fade" id="picaModal{{ $input->id }}" tabindex="-1"
+     aria-labelledby="picaModalLabel{{ $input->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            {{-- Header --}}
+            <div class="modal-header bg-success text-white rounded-top-3">
+                <h5 class="modal-title fw-bold" id="picaModalLabel{{ $input->id }}">
+                    <i class="fa fa-image me-2"></i> Manage PICA untuk {{ $input->tgl }} - Shift {{ $input->shift }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <!-- Updated Modal for PICA (per row) - Now with upload forms, delete, and lock alerts -->
-            <div class="modal fade" id="picaModal{{ $input->id }}" tabindex="-1"
-                 aria-labelledby="picaModalLabel{{ $input->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content border-0 shadow-lg rounded-3">
-                        <!-- Header -->
-                        <div class="modal-header bg-success text-white rounded-top-3">
-                            <h5 class="modal-title fw-bold" id="picaModalLabel{{ $input->id }}">
-                                <i class="fa fa-image me-2"></i> Manage PICA untuk {{ $input->tgl }} - Shift {{ $input->shift }}
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
+            {{-- Body --}}
+            <div class="modal-body px-4 py-3">
+                {{-- Notifikasi awal terkait lock PICA --}}
+                <div class="alert alert-danger text-white fw-bold" role="alert">
+                    <i class="fa fa-info-circle me-2"></i>
+                    <strong>Info PICA:</strong> Anda dapat mengupload, mengganti, atau menghapus PICA dalam 30 menit setelah upload awal. Setelah itu, PICA akan terkunci dan tidak dapat diubah lagi.
+                </div>
 
-                        <!-- Body -->
-                        <div class="modal-body px-4 py-3">
-                            <!-- Notifikasi awal terkait lock PICA -->
-                            <div class="alert alert-danger text-white fw-bold" role="alert">
-                                <i class="fa fa-info-circle me-2"></i>
-                                <strong>Info PICA:</strong> Anda dapat mengupload, mengganti, atau menghapus PICA dalam 30 menit setelah upload awal. Setelah itu, PICA akan terkunci dan tidak dapat diubah lagi.
-                            </div>
-
-                            @php $allDetails = $input->details; @endphp
-                            @if($allDetails->count() > 0)
-                                <p class="text-muted mb-3">Total Defect Details: {{ $allDetails->count() }} | Uploaded PICA: {{ $allDetails->whereNotNull('pica')->count() }}</p>
-                                <div class="pica-grid">
-                                    @foreach($allDetails as $detail)
+                @php $allDetails = $input->details; @endphp
+                @if($allDetails->count() > 0)
+                    <p class="text-muted mb-3">Total Defect Details: {{ $allDetails->count() }} | Uploaded PICA: {{ $allDetails->whereNotNull('pica')->count() }}</p>
+                    <div class="pica-grid">
+                        @foreach($allDetails as $detail)
                             @php
-                                // Null-safe: Pastiin pica_uploaded_at adalah Carbon atau null
-                                $picaUploadedAt = $detail->pica_uploaded_at instanceof \Carbon\Carbon
-                                    ? $detail->pica_uploaded_at
-                                    : null;
-
-                                $canEditPica = !$detail->pica ||
-                                            ($picaUploadedAt && now()->diffInMinutes($picaUploadedAt, false) <= 30);
-
-                                $uploadTime = $picaUploadedAt ? $picaUploadedAt->format('d/m/Y H:i') : 'N/A';
+                                $lockMinutes = 30; // Normal: 30 menit
+                                $canEditPica = $detail->canEditPica($lockMinutes);
+                                $uploadTime = $detail->pica_uploaded_at ? $detail->pica_uploaded_at->format('d/m/Y H:i') : 'N/A';
                             @endphp
 
-                                    <div class="pica-item">
-                                        <div class="defect-sub-name">
-                                            {{ $detail->sub->jenis_defect ?? 'Unknown Defect Sub' }}
-                                            <span class="badge bg-light text-dark fs-6">Jumlah Defect : {{ $detail->jumlah_defect }}</span>
-                                        </div>
-
-                                        @if($detail->pica)
-                                            <img src="{{ asset('storage/' . $detail->pica) }}" alt="PICA for {{ $detail->sub->jenis_defect ?? 'Detail' }} {{ $detail->id }}" class="pica-image" style="max-height: 200px;">
-
-                                            @if(!$canEditPica)
-                                                <div class="locked-alert">
-                                                    <i class="fa fa-lock me-1"></i> PICA terkunci setelah 30 menit. Upload/Hapus tidak dapat dilakukan.
-                                                </div>
-                                                <!-- Button disabled -->
-                                                <button type="button" class="btn btn-warning btn-sm w-100 opacity-50" disabled>Replace PICA</button>
-                                                <button type="button" class="btn btn-danger btn-sm w-100 opacity-50 mt-1" disabled>Delete PICA</button>
-                                            @else
-                                                <!-- Form to replace PICA (button enabled) -->
-                                                <form action="{{ route('defect-inputs.upload-pica', [$input, $detail]) }}" method="POST" enctype="multipart/form-data" class="upload-form">
-                                                    @csrf
-                                                    <input type="file" name="pica" accept="image/*">
-                                                    <button type="submit" class="btn btn-warning btn-sm w-100">Replace PICA</button>
-                                                </form>
-
-                                                <!-- Form to delete PICA (button enabled) -->
-                                                <form action="{{ route('defect-inputs.delete-pica', [$input, $detail]) }}" method="POST" class="upload-form mt-1">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Yakin hapus PICA ini?')">Delete PICA</button>
-                                                </form>
-                                            @endif
-                                        @else
-                                                <div class="text-center py-3">
-                                                    <i class="fa fa-image fa-2x text-muted mb-2"></i>
-                                                    <p class="text-muted small">Belum ada PICA</p>
-                                                </div>
-
-                                                <!-- Upload Form -->
-                                                <form action="{{ route('defect-inputs.upload-pica', [$input, $detail]) }}" method="POST" enctype="multipart/form-data" class="upload-form">
-                                                    @csrf
-                                                    <input type="file" name="pica" accept="image/*" required>
-                                                    <br><br>
-                                                    <button type="submit" class="btn btn-primary btn-sm w-100">Upload PICA</button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                            <div class="pica-item mb-4 p-3 border rounded">
+                                <div class="defect-sub-name mb-2">
+                                    <strong>{{ $detail->sub->jenis_defect ?? 'Unknown Defect Sub' }}</strong>
+                                    <span class="badge bg-light text-dark fs-6 ms-2">Jumlah Defect: {{ $detail->jumlah_defect }}</span>
+                                    @if($detail->pica)
+                                        <small class="text-muted d-block">Uploaded: {{ $uploadTime }}</small>
+                                    @endif
                                 </div>
-                            @else
-                                <div class="text-center text-muted py-5">
-                                    <i class="fa fa-exclamation-triangle fa-3x mb-3 opacity-50"></i>
-                                    <p>Belum ada Defect Details untuk data ini.</p>
-                                    <small>Tambahkan details melalui halaman edit atau create.</small>
-                                </div>
-                            @endif
-                        </div>
 
-                        <!-- Footer -->
-                        <div class="modal-footer border-0">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i> Close
-                            </button>
-                        </div>
+                                @if($detail->pica)
+                                    {{-- Gambar sudah ada --}}
+                                    <img src="{{ asset('storage/' . $detail->pica) }}" alt="PICA {{ $detail->id }}" class="pica-image img-fluid mb-2" style="max-height: 200px; object-fit: cover;">
+
+                                    @if(!$canEditPica)
+                                        {{-- Locked --}}
+                                        <div class="locked-alert alert alert-danger text-center mb-2 text-white">
+                                            <i class="fa fa-lock me-2"></i>
+                                            <strong>PICA terkunci.</strong> Tidak bisa diubah/hapus.
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="badge bg-gradient-warning border-0 shadow-sm w-100 opacity-50" disabled>
+                                                <i class="fa-solid fa-rotate fs-6"></i>
+                                            </button>
+                                            <button type="button" class="badge bg-gradient-danger border-0 shadow-sm w-100 opacity-50" disabled>
+                                                <i class="fa-solid fa-trash fs-6"></i>
+                                            </button>
+                                        </div>
+                                    @else
+                                        {{-- Bisa edit --}}
+                                        <div class="d-flex gap-2 align-items-center">
+                                            {{-- Form Replace PICA --}}
+                                            <form id="uploadForm{{ $detail->id }}"
+                                                  action="{{ route('defect-inputs.upload-pica', [$input, $detail]) }}"
+                                                  method="POST" enctype="multipart/form-data" class="d-inline">
+                                                @csrf
+                                                <input type="file" id="picaInput{{ $detail->id }}" name="pica" accept="image/*" class="d-none"
+                                                       onchange="document.getElementById('uploadForm{{ $detail->id }}').submit()">
+
+                                                <button type="button" class="badge bg-gradient-warning border-0 shadow-sm w-100"
+                                                        onclick="document.getElementById('picaInput{{ $detail->id }}').click()"
+                                                        title="Ganti PICA">
+                                                    <i class="fa-solid fa-rotate fs-6"></i>
+                                                </button>
+                                            </form>
+
+                                            {{-- Form Delete PICA --}}
+                                            <form action="{{ route('defect-inputs.delete-pica', [$input, $detail]) }}" method="POST" class="d-inline w-100">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="badge bg-gradient-danger border-0 shadow-sm w-100"
+                                                        onclick="return confirm('Yakin hapus PICA ini?')" title="Hapus PICA">
+                                                    <i class="fa-solid fa-trash fs-6"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                @else
+                                    {{-- Belum ada PICA --}}
+                                    <div class="text-center py-3">
+                                        <i class="fa fa-image fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small">Belum ada PICA</p>
+                                    </div>
+
+                                    {{-- Upload PICA --}}
+                                    <form id="uploadForm{{ $detail->id }}"
+                                          action="{{ route('defect-inputs.upload-pica', [$input, $detail]) }}"
+                                          method="POST" enctype="multipart/form-data" class="text-center">
+                                        @csrf
+                                        <input type="file" id="picaInput{{ $detail->id }}" name="pica" accept="image/*" class="d-none"
+                                               onchange="document.getElementById('uploadForm{{ $detail->id }}').submit()">
+
+                                        <button type="button" class="badge bg-gradient-primary border-0 shadow-sm px-3 py-2"
+                                                onclick="document.getElementById('picaInput{{ $detail->id }}').click()">
+                                            <i class="fa fa-upload me-1"></i> Upload PICA
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
-                </div>
+                @else
+                    <div class="text-center text-muted py-5">
+                        <i class="fa fa-exclamation-triangle fa-3x mb-3 opacity-50"></i>
+                        <p>Belum ada Defect Details untuk data ini.</p>
+                        <small>Tambahkan details melalui halaman edit atau create.</small>
+                    </div>
+                @endif
             </div>
+
+            {{-- Footer --}}
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
         @empty
             <tr><td colspan="10" class="text-center text-muted fst-italic">Belum ada data</td></tr>
