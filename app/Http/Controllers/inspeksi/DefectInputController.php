@@ -38,36 +38,40 @@ class DefectInputController extends Controller
     }
 
     public function index(Request $request)
-    {
-        // Ambil query input filter & search
-        $filter = $request->get('filter', 'today'); // default 'today'
-        $search = $request->get('search'); // keyword pencarian
+{
+    $filter = $request->get('filter', 'today');
+    $search = $request->get('search');
+    $month = $request->get('month', now()->month);
+    $year  = $request->get('year', now()->year);
 
-        $query = \App\Models\DefectInput::query();
+    $query = \App\Models\DefectInput::query();
 
-        // Filter berdasarkan tanggal (opsional)
-        if ($filter === 'today') {
-            $query->whereDate('tgl', now()->toDateString());
-        }
-
-        // 🔎 Tambahin fitur search
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('id', $search) // cari by ID
-                  ->orWhere('tgl', 'like', "%{$search}%")
-                  ->orWhere('shift', 'like', "%{$search}%")
-                  ->orWhere('npk', 'like', "%{$search}%")
-                  ->orWhere('line', 'like', "%{$search}%")
-                  ->orWhere('marking_number', 'like', "%{$search}%")
-                  ->orWhere('lot', 'like', "%{$search}%");
-            });
-        }
-
-        // Urutkan & paginate dengan eager loading untuk details dan sub (relasi DefectSub)
-        $inputs = $query->with(['details.sub'])->latest()->paginate(10);
-
-        return view('defect_inputs.index', compact('inputs', 'filter', 'search'));
+    if ($filter === 'today') {
+        $query->whereDate('tgl', now()->toDateString());
+    } elseif ($filter === 'all') {
+        // 🔹 Filter semua data dalam bulan & tahun yang dipilih
+        $query->whereMonth('tgl', $month)
+              ->whereYear('tgl', $year);
     }
+
+    // 🔎 Search
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('id', $search)
+              ->orWhere('tgl', 'like', "%{$search}%")
+              ->orWhere('shift', 'like', "%{$search}%")
+              ->orWhere('npk', 'like', "%{$search}%")
+              ->orWhere('line', 'like', "%{$search}%")
+              ->orWhere('marking_number', 'like', "%{$search}%")
+              ->orWhere('lot', 'like', "%{$search}%");
+        });
+    }
+
+    $inputs = $query->with(['details.sub'])->latest()->paginate(10);
+
+    return view('defect_inputs.index', compact('inputs', 'filter', 'search', 'month', 'year'));
+}
+
 
     public function create()
     {
@@ -287,7 +291,7 @@ public function uploadPica(Request $request, DefectInput $defectInput, DefectInp
     } catch (ValidationException $e) {
         return back()->withErrors($e->errors())->withInput();
     }
-    
+
 }
 
 public function deletePica(DefectInput $defectInput, DefectInputDetail $detail)

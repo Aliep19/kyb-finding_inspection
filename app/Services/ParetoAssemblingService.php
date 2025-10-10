@@ -20,7 +20,7 @@ class ParetoAssemblingService
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        // Ambil semua workstation yang punya data di bulan berjalan
+        // Ambil TOP 3 workstation berdasarkan SUM(jumlah_defect)
         $workstations = Workstation::join('sub_workstations', 'workstations.id', '=', 'sub_workstations.id_workstation')
             ->join('defect_inputs', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
             ->join('defect_input_details', 'defect_inputs.id', '=', 'defect_input_details.defect_input_id')
@@ -30,8 +30,9 @@ class ParetoAssemblingService
             ->whereYear('defect_inputs.tgl', $currentYear)
             ->whereMonth('defect_inputs.tgl', $currentMonth)
             ->groupBy('workstations.sect_name')
-            ->select('workstations.sect_name', DB::raw('COUNT(defect_input_details.id) as defect_count'))
+            ->select('workstations.sect_name', DB::raw('SUM(defect_input_details.jumlah_defect) as defect_count'))
             ->orderByDesc('defect_count')
+            ->limit(3)
             ->get();
 
         $chartData = [];
@@ -39,7 +40,7 @@ class ParetoAssemblingService
             $sectionName = $workstation->sect_name;
             $chartTitle = 'TOP 3 Pareto ' . strtoupper($sectionName);
 
-            // Query untuk ambil top 3 defects per workstation
+            // Query untuk ambil top 3 defects per workstation - EXTENDED: Tambah GROUP_CONCAT untuk pica images
             $topDefects = DefectInputDetail::join('defect_inputs', 'defect_input_details.defect_input_id', '=', 'defect_inputs.id')
                 ->join('defect_subs', 'defect_input_details.defect_sub_id', '=', 'defect_subs.id')
                 ->join('sub_workstations', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
@@ -53,7 +54,8 @@ class ParetoAssemblingService
                 ->whereMonth('defect_inputs.tgl', $currentMonth)
                 ->select(
                     'defect_subs.jenis_defect as defect_name',
-                    DB::raw('SUM(defect_input_details.jumlah_defect) as total_defect')
+                    DB::raw('SUM(defect_input_details.jumlah_defect) as total_defect'),
+                    DB::raw('GROUP_CONCAT(DISTINCT defect_input_details.pica SEPARATOR ",") as picas')  // Asumsi kolom 'pica' berisi path gambar, comma-separated untuk multiple
                 )
                 ->groupBy('defect_subs.jenis_defect')
                 ->orderByDesc('total_defect')
@@ -65,12 +67,19 @@ class ParetoAssemblingService
                 'labels' => [],
                 'values' => [],
                 'colors' => [],
+                'images' => [],  // Tambahan: Array gambar per defect (bisa multiple, atau ambil satu pertama)
             ];
 
             foreach ($topDefects as $index => $defect) {
                 $data['labels'][] = $defect->defect_name;
                 $data['values'][] = (int) $defect->total_defect;
                 $data['colors'][] = $this->defectColors[$index] ?? $this->randomColor();
+
+                // Parse picas: Ambil array path gambar (misal, tampilkan satu pertama, atau semua)
+                $picaPaths = $defect->picas ? explode(',', $defect->picas) : [];
+                $data['images'][] = array_map(function ($path) {
+                    return asset('storage/pica/' . basename($path)); // Gunakan asset untuk path publik
+                }, array_filter($picaPaths));
             }
 
             $chartData[$sectionName] = $data;
@@ -84,7 +93,7 @@ class ParetoAssemblingService
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        // Ambil semua workstation yang punya data
+        // Ambil TOP 3 workstation yang sama kayak di Pareto
         $workstations = Workstation::join('sub_workstations', 'workstations.id', '=', 'sub_workstations.id_workstation')
             ->join('defect_inputs', 'defect_inputs.line', '=', 'sub_workstations.subsect_name')
             ->join('defect_input_details', 'defect_inputs.id', '=', 'defect_input_details.defect_input_id')
@@ -93,10 +102,11 @@ class ParetoAssemblingService
             })
             ->whereYear('defect_inputs.tgl', $currentYear)
             ->whereMonth('defect_inputs.tgl', $currentMonth)
-            ->select('workstations.sect_name')
-            ->distinct()
+            ->groupBy('workstations.sect_name')
+            ->select('workstations.sect_name', DB::raw('SUM(defect_input_details.jumlah_defect) as defect_count'))
+            ->orderByDesc('defect_count')
+            ->limit(3)
             ->get();
-
 
         $defectDetails = [];
         foreach ($workstations as $workstation) {
@@ -190,9 +200,26 @@ class ParetoAssemblingService
                     }
                 }
 
+                // Logika warna berdasarkan perbandingan minggu sebelumnya
+                $trendColors = [];
+                for ($i = 0; $i < count($trendValues); $i++) {
+                    if ($i == 0) {
+                        $trendColors[] = '#808080'; // minggu pertama netral
+                    } else {
+                        if ($trendValues[$i] > $trendValues[$i - 1]) {
+                            $trendColors[] = '#FF0000'; // naik → merah
+                        } elseif ($trendValues[$i] < $trendValues[$i - 1]) {
+                            $trendColors[] = '#008000'; // turun → hijau
+                        } else {
+                            $trendColors[] = '#808080'; // sama → abu-abu
+                        }
+                    }
+                }
+
                 $trend = [
                     'labels' => $weeks,
                     'values' => $trendValues,
+                    'colors' => $trendColors,
                 ];
 
                 $workstationDetails[$defectName] = [

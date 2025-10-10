@@ -1,6 +1,54 @@
 <x-head></x-head>
 
 <style>
+    /* 🔹 Header minimalis untuk tiap slide */
+    .slide-header {
+        background: linear-gradient(90deg, #dc3545 0%, #a71d2a 100%);
+        color: #fff;
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .slide-header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+        color: white;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+    }
+
+    .slide-header img {
+        height: 36px;
+        background: #fff;
+        border-radius: 0.4rem;
+        padding: 3px 6px;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 🔹 Hover halus di logo */
+    .slide-header img:hover {
+        transform: scale(1.05);
+        transition: 0.3s ease;
+    }
+
+    /* 🔹 Responsif */
+    @media (max-width: 768px) {
+        .slide-header h1 {
+            font-size: 1rem;
+        }
+        .slide-header img {
+            height: 28px;
+        }
+    }
+
     /* 🔹 Fix tinggi tiap slide supaya nggak naik turun */
     #menuCarousel .carousel-item {
         min-height: 100vh;
@@ -55,62 +103,45 @@
     <div id="menuCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="20000">
         <div class="carousel-inner">
 
-            <!-- 🔹 Slide 1 -->
-            <div class="carousel-item active">
-                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                    {{-- Header Card --}}
-                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                        <h1 class="col-8 mb-0 text-white ps-4 py-3">
-                            Final Inspection Finding - {{ \Carbon\Carbon::now()->format('F Y') }}
-                        </h1>
-                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
-                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
-                        </div>
-                    </div>
-                </div>
-                @include('monitoring.chart')
-                @include('monitoring.stats')
-            </div>
+        <div class="carousel-item active">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        {{-- Header Minimalis --}}
+        <div class="slide-header">
+            <h1>Final Inspection Finding - {{ \Carbon\Carbon::now()->format('F Y') }}</h1>
+            <img src="{{ asset('img/kyb.png') }}" alt="KYB Logo">
+        </div>
+    </div>
+    @include('monitoring.chart')
+    @include('monitoring.stats')
+</div>
 
-            <!-- 🔹 Slide 2 -->
-            <div class="carousel-item">
-                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                    {{-- Header Card --}}
-                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                                    <h1 class="col-8 mb-0 text-white ps-4 py-3">
-                                        Pareto FI Finding by Problem - {{ \Carbon\Carbon::now()->format('F Y') }}
-                                    </h1>
-                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
-                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
-                        </div>
-                    </div>
-                </div>
-                @include('monitoring.pareto')
+<!-- Slide 2 -->
+<div class="carousel-item">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="slide-header">
+            <h1>Pareto FI Finding by Problem - {{ \Carbon\Carbon::now()->format('F Y') }}</h1>
+            <img src="{{ asset('img/kyb.png') }}" alt="KYB Logo">
+        </div>
+    </div>
+    @include('monitoring.pareto')
+    <div class="row mt-3">
+        @include('monitoring.pareto_table')
+        @include('monitoring.pareto_pie')
+        @include('monitoring.pareto_list')
+    </div>
+</div>
 
-                <div class="row mt-3">
-                    @include('monitoring.pareto_table')
-                    @include('monitoring.pareto_pie')
-                    @include('monitoring.pareto_list')
-                </div>
-            </div>
-            <!-- 🔹 Slide 3 -->
-            <div class="carousel-item">
-                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                    {{-- Header Card --}}
-                    <div class="row bg-danger p-0 align-items-center mx-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                            <h1 class="col-8 mb-0 text-white ps-4 py-3">
-                                Pareto FI Finding by LINE - {{ \Carbon\Carbon::now()->format('F Y') }}
-                            </h1>
-                        <div class="col-4 d-flex justify-content-end align-items-center pe-4">
-                            <img class="bg-white p-1 rounded shadow-sm" src="{{ asset('img/kyb.png') }}" alt="KYB Logo" style="height:40px;">
-                        </div>
-                    </div>
-                </div>
-                @include('monitoring.pareto_assembling')
-                @include('monitoring.detail_pareto')
-
-
-            </div>
+<!-- Slide 3 -->
+<div class="carousel-item">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="slide-header">
+            <h1>Pareto FI Finding by LINE - {{ \Carbon\Carbon::now()->format('F Y') }}</h1>
+            <img src="{{ asset('img/kyb.png') }}" alt="KYB Logo">
+        </div>
+    </div>
+    @include('monitoring.pareto_assembling')
+    @include('monitoring.detail_pareto')
+</div>
 
         </div>
 
@@ -133,4 +164,3 @@
 </script>
 
 <x-script></x-script>
-
