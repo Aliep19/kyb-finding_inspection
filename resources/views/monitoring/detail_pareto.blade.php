@@ -58,15 +58,16 @@
                             data: {
                                 labels: {!! json_encode($data['trend']['labels']) !!},
                                 datasets: [
-                                    {
-                                        type: 'bar',
-                                        label: 'Quantity (Bar)',
-                                        data: {!! json_encode($data['trend']['values']) !!},
-                                        backgroundColor: 'rgba(220, 53, 69, 0.3)',
-                                        borderColor: 'rgba(220, 53, 69, 1)',
-                                        borderWidth: 1,
-                                        yAxisID: 'y'
-                                    },
+                        {
+                            type: 'bar',
+                            label: 'Quantity (Bar)',
+                            data: {!! json_encode($data['trend']['values']) !!},
+                            backgroundColor: {!! json_encode($data['trend']['colors']) !!},
+                            borderColor: {!! json_encode($data['trend']['colors']) !!},     
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+
                                     {
                                         type: 'line',
                                         label: 'Trend Line',

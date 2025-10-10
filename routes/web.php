@@ -57,8 +57,12 @@ Route::prefix('defect-inputs')->name('defect-inputs.')->group(function () {
     Route::get('/', [DefectInputController::class, 'index'])->name('index');
     Route::get('/create', [DefectInputController::class, 'create'])->name('create');
     Route::post('/', [DefectInputController::class, 'store'])->name('store');
-    Route::get('/{defectInput}/edit', [DefectInputController::class, 'edit'])->name('edit');
-    Route::put('/{defectInput}', [DefectInputController::class, 'update'])->name('update');
+    Route::get('/{defectInput}/edit', [DefectInputController::class, 'edit'])
+        ->name('edit')
+        ->middleware('role:foreman,staff');
+    Route::put('/{defectInput}', [DefectInputController::class, 'update'])
+        ->name('update')
+        ->middleware('role:foreman,staff');
     Route::delete('/{defectInput}', [DefectInputController::class, 'destroy'])->name('destroy');
     Route::get('/{defectInput}', [DefectInputController::class, 'show'])->name('show');
     Route::post('/{defectInput}/details/{detail}/upload-pica', [DefectInputController::class, 'uploadPica'])->name('upload-pica');

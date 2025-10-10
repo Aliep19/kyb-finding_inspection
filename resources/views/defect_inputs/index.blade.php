@@ -69,13 +69,16 @@
     <!-- Kolom kiri: Filter -->
     <div class="col-md-6">
         <form method="GET" action="{{ route('defect-inputs.index') }}" class="d-inline">
-            <label for="filter" class="me-2 fw-semibold">Filter:</label>
-            <select name="filter" id="filter" onchange="this.form.submit()"
-                    class="form-select form-select-sm d-inline w-20">
-                <option value="today" {{ $filter == 'today' ? 'selected' : '' }}>Today</option>
-                <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>All Days</option>
-            </select>
-        </form>
+    <input type="hidden" name="month" value="{{ $month }}">
+    <input type="hidden" name="year" value="{{ $year }}">
+    <label for="filter" class="me-2 fw-semibold">Filter:</label>
+    <select name="filter" id="filter" onchange="this.form.submit()"
+            class="form-select form-select-sm d-inline w-20">
+        <option value="today" {{ $filter == 'today' ? 'selected' : '' }}>Today</option>
+        <option value="all" {{ $filter == 'all' ? 'selected' : '' }}>All Days</option>
+    </select>
+</form>
+
     </div>
 
     <!-- Kolom kanan: Tombol aksi -->
@@ -109,7 +112,7 @@
             </ul>
         </div>
     @endif
-    <x-search-page />
+    <x-search-page></x-search-page>
     <div class="table-responsive">
     <table class="sortable table table-hover table-custom align-middle" >
     <thead>
@@ -162,11 +165,13 @@
                             title="Show Details">
                         <i class="fa fa-info-circle fs-6"></i>
                     </button>
+                    @if(Auth::user()->role === 'foreman' || Auth::user()->role === 'staff')
                     <a href="{{ route('defect-inputs.edit', $input->id) }}"
                        class="badge bg-gradient-warning border-0 shadow-sm"
                        title="Edit">
                         <i class="fa fa-edit fs-6"></i>
                     </a>
+                    @endif
                     <form action="{{ route('defect-inputs.destroy', $input->id) }}" method="POST" class="d-inline">
                         @csrf @method('DELETE')
                         <button class="badge bg-gradient-danger border-0 shadow-sm"
